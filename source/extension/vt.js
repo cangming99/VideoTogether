@@ -1697,7 +1697,7 @@ async function clearRoomChatHistory(roomId) {
                 messages.forEach(msg => {
                     renderChatMessage(chatHistoryEl, msg.sender, msg.content, msg.isSelf);
                 });
-            });
+            }).catch(() => {});
         }
 
         enableSpeechSynthesis() {
