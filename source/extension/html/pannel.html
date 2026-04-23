@@ -90,10 +90,13 @@
         </div>
         <div>
           <div id="textMessageChat" style="display: none;">
-            <input id="textMessageInput" autocomplete="off" placeholder="{$textMessageInput$}">
-            <button id="textMessageSend" class="vt-btn vt-btn-primary" type="button">
-              <span>{$textMessageSend$}</span>
-            </button>
+            <div id="chatHistory" style="max-height: 120px; overflow-y: auto; margin-bottom: 8px; text-align: left;"></div>
+            <div style="display: flex; gap: 6px;">
+              <input id="textMessageInput" autocomplete="off" placeholder="{$textMessageInput$}">
+              <button id="textMessageSend" class="vt-btn vt-btn-primary" type="button">
+                <span>{$textMessageSend$}</span>
+              </button>
+            </div>
           </div>
           <div id="textMessageConnecting" style="display: none;">
             <span id="textMessageConnectingStatus">{$textMessageConnecting$}</span>
@@ -803,5 +806,29 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .chat-message {
+    padding: 4px 8px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    font-size: 12px;
+    max-width: 90%;
+    word-wrap: break-word;
+  }
+  .chat-message.self {
+    background-color: #e8f5e9;
+    margin-left: 10%;
+    text-align: right;
+  }
+  .chat-message.other {
+    background-color: #e3f2fd;
+    text-align: left;
+  }
+  .chat-message .sender {
+    font-size: 10px;
+    font-weight: bold;
+    margin-bottom: 2px;
+    color: #666;
   }
 </style>
