@@ -1311,6 +1311,8 @@
                         if (id == extension.currentSendingMsgId && msg == msgInput.value) {
                             msgInput.value = "";
                         }
+                        const ttsContent = getTTSContent(msg);
+                        extension.gotTextMsg(id, ttsContent, false, -1);
                     }
                     msgInput.addEventListener("keyup", e => {
                         if (e.key == "Enter") {
