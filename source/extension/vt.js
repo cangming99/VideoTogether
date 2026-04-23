@@ -1299,9 +1299,12 @@
                     }
                     closeBtn.onclick = () => { shadowWrapper.style.display = "none"; }
                     wrapper.getElementById('expand-button').addEventListener('click', () => expand());
-                    sendBtn.onclick = () => {
+                    sendBtn.onclick = async () => {
                         extension.currentSendingMsgId = generateUUID();
-                        sendMessageToTop(MessageType.SendTxtMsg, { currentSendingMsgId: extension.currentSendingMsgId, value: msgInput.value });
+                        const nickname = await getGM().getValue("ChatNickname") || "匿名用户";
+                        const content = msgInput.value;
+                        const wrappedMsg = wrapMessage(nickname, content);
+                        sendMessageToTop(MessageType.SendTxtMsg, { currentSendingMsgId: extension.currentSendingMsgId, value: wrappedMsg });
                     }
                     GotTxtMsgCallback = (id, msg) => {
                         console.log(id, msg);
@@ -1365,7 +1368,10 @@
                 });
                 wrapper.querySelector("#textMessageSend").onclick = async () => {
                     extension.currentSendingMsgId = generateUUID();
-                    WS.sendTextMessage(extension.currentSendingMsgId, select("#textMessageInput").value);
+                    const nickname = await getGM().getValue("ChatNickname") || "匿名用户";
+                    const content = select("#textMessageInput").value;
+                    const wrappedMsg = wrapMessage(nickname, content);
+                    WS.sendTextMessage(extension.currentSendingMsgId, wrappedMsg);
                 }
                 this.lobbyBtnGroup = wrapper.querySelector("#lobbyBtnGroup");
                 this.createRoomButton = wrapper.querySelector('#videoTogetherCreateButton');
