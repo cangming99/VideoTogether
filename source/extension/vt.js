@@ -1292,6 +1292,20 @@ async function clearRoomChatHistory(roomId) {
 
     let GotTxtMsgCallback = undefined;
 
+    function renderChatMessage(chatHistoryEl, sender, content, isSelf) {
+        const msgDiv = document.createElement("div");
+        msgDiv.className = `chat-message ${isSelf ? 'self' : 'other'}`;
+        msgDiv.innerHTML = `<div class="sender">${isSelf ? '我' : sender}</div><div class="content">${escapeHtml(content)}</div>`;
+        chatHistoryEl.appendChild(msgDiv);
+        chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     class VideoTogetherFlyPannel {
         constructor() {
             this.sessionKey = "VideoTogetherFlySaveSessionKey";
@@ -1352,16 +1366,23 @@ async function clearRoomChatHistory(roomId) {
                         console.log(id, msg);
                         const parsed = parseMessage(msg);
                         const roomId = extension.ctxRoomId || "default";
+                        const isSelf = id == extension.currentSendingMsgId;
 
                         // 存储到历史记录
-                        await addMessageToHistory(roomId, parsed.sender, parsed.content, id == extension.currentSendingMsgId);
+                        await addMessageToHistory(roomId, parsed.sender, parsed.content, isSelf);
+
+                        // 渲染到 UI
+                        const chatHistoryEl = select("#chatHistory");
+                        if (chatHistoryEl) {
+                            renderChatMessage(chatHistoryEl, parsed.sender, parsed.content, isSelf);
+                        }
 
                         // TTS 过滤
                         const ttsContent = getTTSContent(msg);
                         if (ttsContent && ttsContent.trim()) {
                             extension.gotTextMsg(id, ttsContent, false, -1);
                         }
-                        if (id == extension.currentSendingMsgId) {
+                        if (isSelf) {
                             msgInput.value = "";
                         }
                     }
@@ -1648,6 +1669,8 @@ async function clearRoomChatHistory(roomId) {
             }
             if (type == 1) {
                 show(this.textMessageChat);
+                // 加载聊天历史
+                this.loadChatHistory();
             }
             if (type == 2) {
                 show(this.textMessageConnecting);
@@ -1663,6 +1686,18 @@ async function clearRoomChatHistory(roomId) {
                 this.textMessageConnectingStatus.innerText = "{$textMessageDisabled$}"
                 show(this.textMessageConnectingStatus);
             }
+        }
+
+        loadChatHistory() {
+            const chatHistoryEl = select("#chatHistory");
+            if (!chatHistoryEl) return;
+            chatHistoryEl.innerHTML = "";
+            const roomId = extension.ctxRoomId || "default";
+            getRoomChatHistory(roomId).then(messages => {
+                messages.forEach(msg => {
+                    renderChatMessage(chatHistoryEl, msg.sender, msg.content, msg.isSelf);
+                });
+            });
         }
 
         enableSpeechSynthesis() {
