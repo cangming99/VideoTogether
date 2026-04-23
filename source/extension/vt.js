@@ -1230,6 +1230,24 @@
         } // End Function _utf8_decode
     }
 
+    // 消息格式: {vt:昵称}消息内容
+    function parseMessage(raw) {
+        const match = raw.match(/^\{vt:([^}]+)\}(.*)$/);
+        if (match) {
+            return { sender: match[1], content: match[2] };
+        }
+        return { sender: "未知", content: raw };
+    }
+
+    function wrapMessage(nickname, content) {
+        return `{vt:${nickname}}${content}`;
+    }
+
+    function getTTSContent(raw) {
+        const match = raw.match(/^\{vt:([^}]+)\}(.*)$/);
+        return match ? match[2] : raw;
+    }
+
     let GotTxtMsgCallback = undefined;
 
     class VideoTogetherFlyPannel {
