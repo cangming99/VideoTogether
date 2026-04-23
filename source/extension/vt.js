@@ -1359,10 +1359,10 @@ async function clearRoomChatHistory(roomId) {
                         // TTS 过滤
                         const ttsContent = getTTSContent(msg);
                         if (ttsContent && ttsContent.trim()) {
-                            this.speak(ttsContent);
+                            extension.gotTextMsg(id, ttsContent, false, -1);
                         }
                         if (id == extension.currentSendingMsgId) {
-                            select("#textMessageInput").value = "";
+                            msgInput.value = "";
                         }
                     }
                     msgInput.addEventListener("keyup", e => {
