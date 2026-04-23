@@ -1307,6 +1307,42 @@ async function clearRoomChatHistory(roomId) {
     }
 
     class VideoTogetherFlyPannel {
+        showBubbleNotification(sender, content) {
+            const smallIcon = select("#videoTogetherSamllIcon");
+            if (!smallIcon) return;
+
+            // 移除已有的气泡
+            const existingBubble = select("#chatBubble");
+            if (existingBubble) existingBubble.remove();
+
+            // 创建气泡
+            const bubble = document.createElement("div");
+            bubble.id = "chatBubble";
+            bubble.style.cssText = `
+                position: fixed;
+                bottom: 45px;
+                right: 15px;
+                background: #fff;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                padding: 8px 12px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+                max-width: 200px;
+                font-size: 12px;
+                z-index: 2147483647;
+            `;
+            bubble.innerHTML = `<strong>${escapeHtml(sender)}:</strong> ${escapeHtml(content)}`;
+
+            document.body.appendChild(bubble);
+
+            // 获取显示时长配置
+            getGM().getValue("ChatBubbleDuration").then(duration => {
+                setTimeout(() => {
+                    bubble.remove();
+                }, duration || 5000);
+            });
+        }
+
         constructor() {
             this.sessionKey = "VideoTogetherFlySaveSessionKey";
             this.isInRoom = false;
@@ -1367,6 +1403,15 @@ async function clearRoomChatHistory(roomId) {
                         const parsed = parseMessage(msg);
                         const roomId = extension.ctxRoomId || "default";
                         const isSelf = id == extension.currentSendingMsgId;
+
+                        // 自己发的消息不显示气泡
+                        if (!isSelf) {
+                            const chatHistoryEl = select("#chatHistory");
+                            // 如果聊天区域不可见，显示气泡
+                            if (!chatHistoryEl || chatHistoryEl.offsetParent === null) {
+                                this.showBubbleNotification(parsed.sender, parsed.content);
+                            }
+                        }
 
                         // 存储到历史记录
                         await addMessageToHistory(roomId, parsed.sender, parsed.content, isSelf);
