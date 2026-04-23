@@ -1230,6 +1230,48 @@
         } // End Function _utf8_decode
     }
 
+// 聊天记录存储
+async function getChatHistory() {
+    try {
+        const history = await getGM().getValue("ChatHistory");
+        return history || {};
+    } catch {
+        return {};
+    }
+}
+
+async function saveChatHistory(history) {
+    await getGM().setValue("ChatHistory", history);
+}
+
+async function addMessageToHistory(roomId, sender, content, isSelf) {
+    const history = await getChatHistory();
+    if (!history[roomId]) {
+        history[roomId] = { messages: [], lastActivity: Date.now() };
+    }
+    history[roomId].messages.push({
+        sender: sender,
+        content: content,
+        timestamp: Date.now(),
+        isSelf: isSelf
+    });
+    history[roomId].lastActivity = Date.now();
+    await saveChatHistory(history);
+}
+
+async function getRoomChatHistory(roomId) {
+    const history = await getChatHistory();
+    return history[roomId]?.messages || [];
+}
+
+async function clearRoomChatHistory(roomId) {
+    const history = await getChatHistory();
+    if (history[roomId]) {
+        delete history[roomId];
+        await saveChatHistory(history);
+    }
+}
+
     // 消息格式: {vt:昵称}消息内容
     function parseMessage(raw) {
         const match = raw.match(/^\{vt:([^}]+)\}(.*)$/);
@@ -1306,13 +1348,22 @@
                         const wrappedMsg = wrapMessage(nickname, content);
                         sendMessageToTop(MessageType.SendTxtMsg, { currentSendingMsgId: extension.currentSendingMsgId, value: wrappedMsg });
                     }
-                    GotTxtMsgCallback = (id, msg) => {
+                    GotTxtMsgCallback = async (id, msg) => {
                         console.log(id, msg);
-                        if (id == extension.currentSendingMsgId && msg == msgInput.value) {
-                            msgInput.value = "";
-                        }
+                        const parsed = parseMessage(msg);
+                        const roomId = extension.ctxRoomId || "default";
+
+                        // 存储到历史记录
+                        await addMessageToHistory(roomId, parsed.sender, parsed.content, id == extension.currentSendingMsgId);
+
+                        // TTS 过滤
                         const ttsContent = getTTSContent(msg);
-                        extension.gotTextMsg(id, ttsContent, false, -1);
+                        if (ttsContent && ttsContent.trim()) {
+                            this.speak(ttsContent);
+                        }
+                        if (id == extension.currentSendingMsgId) {
+                            select("#textMessageInput").value = "";
+                        }
                     }
                     msgInput.addEventListener("keyup", e => {
                         if (e.key == "Enter") {
