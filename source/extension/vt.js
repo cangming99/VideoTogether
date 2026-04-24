@@ -766,6 +766,8 @@
             dsply(micBtn, inCall);
             dsply(audioBtn, inCall);
             dsply(callErrorBtn, s == VoiceStatus.ERROR);
+            let exitCallBtn = select("#exitCallBtn");
+            dsply(exitCallBtn, inCall);
             switch (s) {
                 case VoiceStatus.STOP:
                     break;
@@ -1666,6 +1668,7 @@ async function clearRoomChatHistory(roomId) {
                 this.callBtn.onclick = () => Voice.join("", window.videoTogetherExtension.roomName);
                 this.audioBtn = wrapper.querySelector("#audioBtn");
                 this.micBtn = wrapper.querySelector("#micBtn");
+                this.exitCallBtn = wrapper.querySelector("#exitCallBtn");
                 this.videoVolume = wrapper.querySelector("#videoVolume");
                 this.callVolumeSlider = wrapper.querySelector("#callVolume");
                 this.callErrorBtn = wrapper.querySelector("#callErrorBtn");
@@ -1926,6 +1929,9 @@ async function clearRoomChatHistory(roomId) {
                             break;
                         }
                     }
+                }
+                this.exitCallBtn.onclick = () => {
+                    Voice.stop();
                 }
 
                 this.createRoomButton.onclick = this.CreateRoomButtonOnClick.bind(this);

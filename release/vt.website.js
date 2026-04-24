@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Video Together 一起看视频
 // @namespace    https://2gether.video/
-// @version      1777046977
+// @version      1777050967
 // @description  Watch video together 一起看视频
 // @author       maggch@outlook.com
 // @match        *://*/*
@@ -1167,6 +1167,8 @@
             dsply(micBtn, inCall);
             dsply(audioBtn, inCall);
             dsply(callErrorBtn, s == VoiceStatus.ERROR);
+            let exitCallBtn = select("#exitCallBtn");
+            dsply(exitCallBtn, inCall);
             switch (s) {
                 case VoiceStatus.STOP:
                     break;
@@ -2109,50 +2111,46 @@ async function clearRoomChatHistory(roomId) {
                 this.wrapper = wrapper;
                 updateInnnerHTML(wrapper, `<div id="peer" style="display: none;"></div>
 <div id="videoTogetherFlyPannel" style="display: none;">
-  <div id="videoTogetherHeader" class="vt-modal-header">
-    <span id="memberCount" style="font-size: 12px; color: #888; flex-shrink: 0;"></span>
-    <span id="videoTogetherRoleText" style="font-size: 12px; color: #666; flex-shrink: 0; margin-left: 8px;"></span>
-
-    <button class="nickname-btn" id="nicknameBtn" style="margin-left: 8px;">
-      <span>👤</span>
-      <span id="nicknameText">匿名用户</span>
-    </button>
-
-    <div style="flex: 1;"></div>
-
-    <span id="roomNameDisplay" style="font-size: 12px; color: #333; flex-shrink: 0; display: none;"></span>
-
-    <div style="flex: 1;"></div>
-
-    <button id="downloadBtn" type="button" class="vt-modal-title-button vt-modal-easyshare" style="display: none; padding: 4px;">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 16.5061C11.5894 16.6615 11.2106 16.75 11 16.75C10.7894 16.75 10.5886 16.6615 10.4465 16.5061L6.44648 12.1311C6.16698 11.8254 6.18822 11.351 6.49392 11.0715C6.79963 10.792 7.27402 10.8132 7.55352 11.1189L10.25 14.0682V3C10.25 2.58579 10.5858 2.25 11 2.25C11.4142 2.25 11.75 2.58579 11.75 3V14.0682L14.4465 11.1189C14.726 10.8132 15.2004 10.792 15.5061 11.0715C15.8118 11.351 15.833 11.8254 15.5535 12.1311L11.5535 16.5061Z" fill="currentColor"/>
-      </svg>
-    </button>
-
-    <button style="display: none;" id="easyShareCopyBtn" type="button" class="vt-modal-title-button vt-modal-easyshare" style="padding: 4px;">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32">
-        <path fill="currentColor" d="M0 25.472q0 2.368 1.664 4.032t4.032 1.664h18.944q2.336 0 4-1.664t1.664-4.032v-8.192l-3.776 3.168v5.024q0 0.8-0.544 1.344t-1.344 0.576h-18.944q-0.8 0-1.344-0.576t-0.544-1.344v-18.944q0-0.768 0.544-1.344t1.344-0.544h9.472v-3.776h-9.472q-2.368 0-4.032 1.664t-1.664 4v18.944z"/>
-      </svg>
-    </button>
-
-    <a href="https://setting.2gether.video/" target="_blank" id="videoTogetherSetting" aria-label="Setting" class="vt-modal-title-button" style="padding: 4px;">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M24 13.616v-3.232c-1.651-.587-2.694-.752-3.219-2.019v-.001c-.527-1.271.1-2.134.847-3.707l-2.285-2.285c-1.561.742-2.433 1.375-3.707.847h-.001c-1.269-.526-1.435-1.576-2.019-3.219h-3.232c-.582 1.635-.749 2.692-2.019 3.219h-.001c-1.271.528-2.132-.098-3.707-.847l-2.285 2.285c.745 1.568 1.375 2.434.847 3.707-.527 1.271-1.584 1.438-3.219 2.02v3.232c1.632.58 2.692.749 3.219 2.019.53 1.282-.114 2.166-.847 3.707l2.285 2.286c1.562-.743 2.434-1.375 3.707-.847h.001c1.27.526 1.436 1.579 2.019 3.219h3.232c.582-1.636.75-2.69 2.027-3.222h.001c1.262-.524 2.12.101 3.698.851l2.285-2.286c-.744-1.563-1.375-2.433-.848-3.706.527-1.271 1.588-1.44 3.221-2.021zm-12 2.384c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4z" />
-      </svg>
-    </a>
-
-    <a href="https://afdian.com/a/videotogether" target="_blank" id="vtDonate" class="vt-modal-title-button" style="padding: 4px;">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
-        <path fill="red" d="M12 4.435c-1.989-5.399-12-4.597-12 3.568 0 4.068 3.06 9.481 12 14.997 8.94-5.516 12-10.929 12-14.997 0-8.118-10-8.999-12-3.568z" />
-      </svg>
-    </a>
-
-    <button id="videoTogetherMinimize" type="button" aria-label="Minimize" class="vt-modal-title-button" style="padding: 4px;">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M18 12.998H6a1 1 0 0 1 0-2h12a1 1 0 0 1 0 2z"></path>
-      </svg>
-    </button>
+  <div id="videoTogetherHeader" class="vt-modal-header" style="flex-direction: column; align-items: stretch; gap: 4px;">
+    <div style="display: flex; align-items: center; width: 100%;">
+      <span id="videoTogetherRoleText" style="font-size: 13px; color: #666; flex-shrink: 0;"></span>
+      <button class="nickname-btn" id="nicknameBtn" style="margin-left: 8px;">
+        <span>👤</span>
+        <span id="nicknameText">匿名用户</span>
+      </button>
+      <div style="flex: 1;"></div>
+      <button id="downloadBtn" type="button" class="vt-modal-title-button vt-modal-easyshare" style="display: none; padding: 4px; background: transparent; border: none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+        </svg>
+      </button>
+      <button style="display: none;" id="easyShareCopyBtn" type="button" class="vt-modal-title-button vt-modal-easyshare" style="padding: 4px; background: transparent; border: none;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+        </svg>
+      </button>
+      <a href="https://setting.2gether.video/" target="_blank" id="videoTogetherSetting" aria-label="Setting" class="vt-modal-title-button" style="padding: 4px; background: transparent; border: none;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+        </svg>
+      </a>
+      <a href="https://afdian.com/a/videotogether" target="_blank" id="vtDonate" class="vt-modal-title-button" style="padding: 4px; background: transparent; border: none;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+          <path fill="red" d="M12 4.435c-1.989-5.399-12-4.597-12 3.568 0 4.068 3.06 9.481 12 14.997 8.94-5.516 12-10.929 12-14.997 0-8.118-10-8.999-12-3.568z" />
+        </svg>
+      </a>
+      <button id="videoTogetherMinimize" type="button" aria-label="Minimize" class="vt-modal-title-button" style="padding: 4px; background: transparent; border: none;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M18 12.998H6a1 1 0 0 1 0-2h12a1 1 0 0 1 0 2z"></path>
+        </svg>
+      </button>
+    </div>
+    <div style="display: flex; align-items: center; width: 100%;">
+      <span id="roomNameDisplay" style="font-size: 13px; color: #333; flex-shrink: 0; display: none;"></span>
+      <span id="memberCount" style="font-size: 13px; color: #888; flex-shrink: 0; margin-left: 8px;"></span>
+      <div style="flex: 1;"></div>
+      <span id="videoTogetherStatusText" style="color: #666; font-size: 13px; flex-shrink: 0;"><a target='_blank' href='https://www.bilibili.com/opus/1015853606261227527'>特大好消息</a></span>
+    </div>
   </div>
 
   <div id="nicknameEditRow" class="nickname-edit-row" style="display: none;">
@@ -2166,7 +2164,6 @@ async function clearRoomChatHistory(roomId) {
 
     <div class="vt-modal-body">
       <div id="mainPannel" class="content" style="display: flex; flex-direction: column; width: 100%; flex: 1; min-height: 0; gap: 8px;">
-        <div id="videoTogetherStatusText" style="color: #666; font-size: 12px;"><a target='_blank' href='https://www.bilibili.com/opus/1015853606261227527'>特大好消息</a></div>
         <div id="roomInputContainer" style="display: flex; flex-direction: column; gap: 8px; padding: 10px 0; width: 100%;">
           <div style="display: flex; align-items: center; gap: 8px;">
             <span class="ellipsis" id="videoTogetherRoomNameLabel" style="width: 70px; flex-shrink: 0;">房间</span>
@@ -2233,9 +2230,9 @@ async function clearRoomChatHistory(roomId) {
 
     <div class="vt-modal-footer">
 
-      <div id="chatInputRow" style="display: flex; gap: 6px; width: 100%; align-items: center; flex-direction: row; flex-wrap: nowrap; box-sizing: border-box;">
-        <input id="textMessageInput" autocomplete="off" placeholder="文字聊天" style="flex: 1; min-width: 60px; height: 34px; padding: 0 10px; font-size: 13px; border-radius: 6px; border: 1px solid #d9d9d9;">
-        <button id="textMessageSend" class="vt-btn vt-btn-primary" type="button" style="height: 34px; padding: 0 16px; font-size: 13px; border-radius: 6px; flex-shrink: 0;">
+      <div id="chatInputRow" style="display: flex; gap: 6px; width: 100%; align-items: center; flex-wrap: nowrap; box-sizing: border-box; min-width: 0;">
+        <input id="textMessageInput" autocomplete="off" placeholder="文字聊天" style="flex: 1; min-width: 0; height: 34px; padding: 0 10px; font-size: 13px; border-radius: 6px; border: 1px solid #d9d9d9;">
+        <button id="textMessageSend" class="vt-btn vt-btn-primary" type="button" style="height: 34px; padding: 0 16px; font-size: 13px; border-radius: 6px; flex-shrink: 0; min-width: 0; box-sizing: border-box;">
           <span>发送</span>
         </button>
       </div>
@@ -2254,63 +2251,48 @@ async function clearRoomChatHistory(roomId) {
 
       <div id="roomButtonGroup" style="display: none; flex-direction: column; gap: 6px;">
         <div style="display: flex; gap: 6px; justify-content: center;">
-          <button id="videoTogetherExitButton" class="vt-btn vt-btn-dangerous" type="button" style="height: 34px; padding: 0 14px; font-size: 14px; border-radius: 10px;">
-            <span>退 出</span>
-          </button>
-          <button id="callBtn" class="vt-btn vt-btn-dangerous" type="button" style="height: 34px; padding: 0 14px; font-size: 14px; border-radius: 10px;">
-            <span>通 话</span>
-          </button>
           <button id="ttsBtn" class="vt-btn" type="button" style="height: 34px; padding: 0 14px; font-size: 14px; border-radius: 10px;">
             <span>TTS</span>
+          </button>
+          <button id="callBtn" class="vt-btn" type="button" style="height: 34px; padding: 0 14px; font-size: 14px; border-radius: 10px; background: #52c41a; color: #fff;">
+            <span>通 话</span>
           </button>
           <button id="chatHistoryBtnRoom" class="vt-btn" type="button" style="height: 34px; padding: 0 14px; font-size: 14px; border-radius: 10px;">
             <span>聊天记录</span>
           </button>
+          <button id="videoTogetherExitButton" class="vt-btn vt-btn-dangerous" type="button" style="height: 34px; padding: 0 14px; font-size: 14px; border-radius: 10px;">
+            <span>退出房间</span>
+          </button>
         </div>
-        <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
+        <div style="display: flex; gap: 6px; justify-content: center; align-items: center; margin-top: 8px;">
+          <button id="exitCallBtn" class="vt-btn" type="button" style="display: none; height: 34px; padding: 0 12px; font-size: 14px; border-radius: 10px; background: #ff4d4f; color: #fff;">
+            退出通话
+          </button>
           <div id="callConnecting" class="lds-ellipsis" style="display: none;">
             <div></div>
             <div></div>
             <div></div>
             <div></div>
           </div>
-          <button id="callErrorBtn" class="vt-modal-title-button error-button vt-btn" style="display: none; height: 26px; padding: 0 8px;">
-            <svg width="16px" height="16px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path fill="currentColor" d="M11.001 10h2v5h-2zM11 16h2v2h-2z" />
-              <path fill="currentColor"
-                d="M13.768 4.2C13.42 3.545 12.742 3.138 12 3.138s-1.42.407-1.768 1.063L2.894 18.064a1.986 1.986 0 0 0 .054 1.968A1.984 1.984 0 0 0 4.661 21h14.678c.708 0 1.349-.362 1.714-.968a1.989 1.989 0 0 0 .054-1.968L13.768 4.2zM4.661 19 12 5.137 19.344 19H4.661z" />
+          <button id="callErrorBtn" class="vt-btn vt-modal-error" style="display: none; height: 34px; width: 34px; padding: 0; border-radius: 10px; background: #ff4d4f; color: #fff; display: flex; align-items: center; justify-content: center;">
+            <svg width="16px" height="16px" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
             </svg>
           </button>
           <button id="audioBtn" style="display: none;" type="button" aria-label="Mute"
-            class="vt-btn vt-modal-audio">
-            <svg width="16px" height="16px" viewBox="0 0 489.6 489.6" fill="currentColor">
-              <path d="M361.1,337.6c2.2,1.5,4.6,2.3,7.1,2.3c3.8,0,7.6-1.8,10-5.2c18.7-26.3,28.5-57.4,28.5-89.9s-9.9-63.6-28.5-89.9
-              c-3.9-5.5-11.6-6.8-17.1-2.9c-5.5,3.9-6.8,11.6-2.9,17.1c15.7,22.1,24,48.3,24,75.8c0,27.4-8.3,53.6-24,75.8
-              C354.3,326.1,355.6,333.7,361.1,337.6z" />
-              <path d="M425.4,396.3c2.2,1.5,4.6,2.3,7.1,2.3c3.8,0,7.6-1.8,10-5.2c30.8-43.4,47.1-94.8,47.1-148.6s-16.3-105.1-47.1-148.6
-              c-3.9-5.5-11.6-6.8-17.1-2.9c-5.5,3.9-6.8,11.6-2.9,17.1c27.9,39.3,42.6,85.7,42.6,134.4c0,48.6-14.7,95.1-42.6,134.4
-              C418.6,384.7,419.9,392.3,425.4,396.3z" />
-              <path d="M254.7,415.7c4.3,2.5,9.2,3.8,14.2,3.8l0,0c7.4,0,14.4-2.8,19.7-7.9c5.6-5.4,8.7-12.6,8.7-20.4V98.5
-              c0-15.7-12.7-28.4-28.4-28.4c-4.9,0-9.8,1.3-14.2,3.8c-0.3,0.2-0.6,0.3-0.8,0.5l-100.1,69.2H73.3C32.9,143.6,0,176.5,0,216.9v55.6
-              c0,40.4,32.9,73.3,73.3,73.3h84.5l95.9,69.2C254,415.3,254.4,415.5,254.7,415.7z M161.8,321.3H73.3c-26.9,0-48.8-21.9-48.8-48.8
-              v-55.6c0-26.9,21.9-48.8,48.8-48.8h84.3c2.5,0,4.9-0.8,7-2.2l102.7-71c0.5-0.3,1.1-0.4,1.6-0.4c1.6,0,3.9,1.2,3.9,3.9v292.7
-              c0,1.1-0.4,2-1.1,2.8c-0.7,0.7-1.8,1.1-2.7,1.1c-0.5,0-1-0.1-1.5-0.3l-98.4-71.1C166.9,322.1,164.4,321.3,161.8,321.3z" />
+            class="vt-btn vt-modal-audio" style="height: 34px; width: 34px; padding: 0; border-radius: 10px; background: #1890ff; color: #fff; display: flex; align-items: center; justify-content: center;">
+            <svg width="16px" height="16px" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
             </svg>
           </button>
           <button id="micBtn" style="display: none;" type="button" aria-label="Microphone"
-            class="vt-btn vt-modal-mic">
-            <svg id="micIconNoSlash" width="16px" height="16px" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2">
-              <rect width="48" height="48" fill="white" fill-opacity="0" />
-              <path d="M31 24V11C31 7.13401 27.866 4 24 4C20.134 4 17 7.13401 17 11V24C17 27.866 20.134 31 24 31C27.866 31 31 27.866 31 24Z" stroke-linejoin="round" />
-              <path d="M9 23C9 31.2843 15.7157 38 24 38C32.2843 38 39 31.2843 39 23" stroke-linecap="round" stroke-linejoin="round" />
-              <path d="M24 38V44" stroke-linecap="round" stroke-linejoin="round" />
+            class="vt-btn vt-modal-mic" style="height: 34px; width: 34px; padding: 0; border-radius: 10px; background: #1890ff; color: #fff; display: flex; align-items: center; justify-content: center;">
+            <svg id="micIconNoSlash" width="16px" height="16px" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
             </svg>
-            <svg id="micIconWithSlash" style="display: none;" width="16px" height="16px" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2">
-              <rect width="48" height="48" fill="white" fill-opacity="0" />
-              <path d="M31 24V11C31 7.13401 27.866 4 24 4C20.134 4 17 7.13401 17 11V24C17 27.866 20.134 31 24 31C27.866 31 31 27.866 31 24Z" stroke-linejoin="round" />
-              <path d="M9 23C9 31.2843 15.7157 38 24 38C32.2843 38 39 31.2843 39 23" stroke-linecap="round" stroke-linejoin="round" />
-              <path d="M24 38V44" stroke-linecap="round" stroke-linejoin="round" />
-              <path d="M42 42L6 6" stroke-linecap="round" stroke-linejoin="round" />
+            <svg id="micIconWithSlash" style="display: none;" width="16px" height="16px" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
+              <line x1="4" y1="4" x2="20" y2="20" stroke="currentColor" stroke-width="2"/>
             </svg>
           </button>
         </div>
@@ -2339,8 +2321,8 @@ async function clearRoomChatHistory(roomId) {
     position: fixed;
     bottom: 15px;
     right: 15px;
-    width: 310px;
-    height: 380px;
+    width: 330px;
+    height: 440px;
     text-align: center;
     border: none !important;
     box-shadow: 0 4px 20px rgba(0,0,0,0.08);
@@ -2353,8 +2335,11 @@ async function clearRoomChatHistory(roomId) {
     flex-shrink: 0;
     cursor: move;
     touch-action: none;
-    align-items: center;
+    align-items: stretch;
     display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-height: unset;
   }
 
   .vt-modal-content {
@@ -2417,7 +2402,7 @@ async function clearRoomChatHistory(roomId) {
     border-bottom: 1px solid #f0f0f0;
     border-radius: 16px 16px 0 0;
     align-items: center;
-    height: 36px;
+    min-height: 36px;
     box-sizing: border-box;
     gap: 2px;
   }
@@ -2435,7 +2420,7 @@ async function clearRoomChatHistory(roomId) {
   }
 
   .vt-modal-body {
-    height: calc(100% - 36px - 140px);
+    height: calc(100% - 36px - 110px);
     min-height: 180px;
     display: flex;
     flex-direction: column;
@@ -2869,17 +2854,20 @@ async function clearRoomChatHistory(roomId) {
     margin-bottom: 6px;
     font-size: 13px;
     max-width: 85%;
+    min-width: 30px;
+    width: fit-content;
     word-wrap: break-word;
     line-height: 1.4;
   }
   .chat-message.self {
     background-color: #e8f5e9;
-    margin-left: 15%;
+    margin-left: auto;
     text-align: right;
     border-bottom-right-radius: 4px;
   }
   .chat-message.other {
     background-color: #f0f2f5;
+    margin-right: auto;
     text-align: left;
     border-bottom-left-radius: 4px;
   }
@@ -2891,6 +2879,7 @@ async function clearRoomChatHistory(roomId) {
   }
   .chat-message .content {
     color: #1f1f1f;
+    text-align: left;
   }
   .nickname-edit-row {
     display: flex;
@@ -3063,6 +3052,7 @@ async function clearRoomChatHistory(roomId) {
                 this.callBtn.onclick = () => Voice.join("", window.videoTogetherExtension.roomName);
                 this.audioBtn = wrapper.querySelector("#audioBtn");
                 this.micBtn = wrapper.querySelector("#micBtn");
+                this.exitCallBtn = wrapper.querySelector("#exitCallBtn");
                 this.videoVolume = wrapper.querySelector("#videoVolume");
                 this.callVolumeSlider = wrapper.querySelector("#callVolume");
                 this.callErrorBtn = wrapper.querySelector("#callErrorBtn");
@@ -3323,6 +3313,9 @@ async function clearRoomChatHistory(roomId) {
                             break;
                         }
                     }
+                }
+                this.exitCallBtn.onclick = () => {
+                    Voice.stop();
                 }
 
                 this.createRoomButton.onclick = this.CreateRoomButtonOnClick.bind(this);
@@ -3825,7 +3818,7 @@ async function clearRoomChatHistory(roomId) {
 
             this.activatedVideo = undefined;
             this.tempUser = generateTempUserId();
-            this.version = '1777046977';
+            this.version = '1777050967';
             this.isMain = (window.self == window.top);
             this.UserId = undefined;
 
