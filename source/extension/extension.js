@@ -58,6 +58,8 @@
         }
         return GM;
     }
+    // Expose getGM to window so vt.js can access it
+    window.getGM = getGM;
 
     function getRealTableName(table) {
         return table.replace('-mini', '');

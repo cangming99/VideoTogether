@@ -753,7 +753,6 @@
         },
         set status(s) {
             this._status = s;
-            let disabledMic = select("#disabledMic");
             let micBtn = select('#micBtn');
             let audioBtn = select('#audioBtn');
             let callBtn = select("#callBtn");
@@ -769,10 +768,10 @@
                 case VoiceStatus.STOP:
                     break;
                 case VoiceStatus.MUTED:
-                    show(disabledMic);
+                    micBtn.classList.add('muted');
                     break;
                 case VoiceStatus.UNMUTED:
-                    hide(disabledMic);
+                    micBtn.classList.remove('muted');
                     break;
                 case VoiceStatus.ERROR:
                     var x = select("#snackbar");
@@ -1230,18 +1229,69 @@
         } // End Function _utf8_decode
     }
 
-// 聊天记录存储
+// 聊天记录存储 - 使用 window.getGM() 或 browser.storage.local (扩展) 或 GM (用户脚本) 或 localStorage (页面上下文)
+function getStorage() {
+    console.log("getStorage check:", {
+        hasWindowGetGM: !!window.getGM,
+        hasBrowserStorage: typeof browser !== 'undefined' && !!browser.storage,
+        hasGM: typeof GM !== 'undefined'
+    });
+    if (window.getGM) {
+        const gm = window.getGM();
+        console.log("window.getGM() returned:", gm);
+        return gm;
+    }
+    if (typeof browser !== 'undefined' && browser.storage && browser.storage.local) {
+        console.log("Using browser.storage.local");
+        return browser.storage.local;
+    }
+    if (typeof GM !== 'undefined') {
+        console.log("Using GM");
+        return GM;
+    }
+    // Fallback to localStorage for page context
+    console.log("Using localStorage fallback");
+    return {
+        get: async (key) => {
+            const value = localStorage.getItem(key);
+            return value ? JSON.parse(value) : null;
+        },
+        set: async (key, value) => {
+            localStorage.setItem(key, JSON.stringify(value));
+        }
+    };
+}
+
+async function getNickname() {
+    const storage = getStorage();
+    console.log("getNickname storage:", storage);
+    if (storage) {
+        const result = await storage.get("ChatNickname");
+        console.log("getNickname result:", result);
+        return result && result.ChatNickname ? result.ChatNickname : "匿名用户";
+    }
+    console.log("getNickname: no storage, returning default");
+    return "匿名用户";
+}
+
 async function getChatHistory() {
     try {
-        const history = await getGM().getValue("ChatHistory");
-        return history || {};
+        const storage = getStorage();
+        if (storage) {
+            const result = await storage.get("ChatHistory");
+            return result && result.ChatHistory ? result.ChatHistory : {};
+        }
+        return {};
     } catch {
         return {};
     }
 }
 
 async function saveChatHistory(history) {
-    await getGM().setValue("ChatHistory", history);
+    const storage = getStorage();
+    if (storage) {
+        await storage.set("ChatHistory", { ChatHistory: history });
+    }
 }
 
 async function addMessageToHistory(roomId, sender, content, isSelf) {
@@ -1315,32 +1365,53 @@ async function clearRoomChatHistory(roomId) {
             const existingBubble = select("#chatBubble");
             if (existingBubble) existingBubble.remove();
 
-            // 创建气泡
+            // 创建气泡 - 现代简约风格
             const bubble = document.createElement("div");
             bubble.id = "chatBubble";
             bubble.style.cssText = `
                 position: fixed;
-                bottom: 45px;
-                right: 15px;
-                background: #fff;
-                border: 1px solid #ddd;
-                border-radius: 8px;
-                padding: 8px 12px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-                max-width: 200px;
-                font-size: 12px;
+                bottom: 60px;
+                right: 20px;
+                background: rgba(30, 30, 30, 0.85);
+                backdrop-filter: blur(10px);
+                border-radius: 12px;
+                padding: 10px 14px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                max-width: 220px;
+                font-size: 13px;
                 z-index: 2147483647;
+                color: #fff;
+                animation: slideInFadeOut 0.3s ease-out forwards;
             `;
-            bubble.innerHTML = `<strong>${escapeHtml(sender)}:</strong> ${escapeHtml(content)}`;
+
+            // 添加淡出动画样式
+            if (!document.getElementById('bubbleAnimStyle')) {
+                const style = document.createElement('style');
+                style.id = 'bubbleAnimStyle';
+                style.textContent = `
+                    @keyframes slideInFadeOut {
+                        0% { opacity: 0; transform: translateY(10px); }
+                        10% { opacity: 1; transform: translateY(0); }
+                        80% { opacity: 1; }
+                        100% { opacity: 0; }
+                    }
+                    @keyframes fadeOutBubble {
+                        0% { opacity: 1; }
+                        100% { opacity: 0; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
+            bubble.innerHTML = `<span style="color: #4ecdc4; font-weight: 600;">${escapeHtml(sender)}</span>: ${escapeHtml(content)}`;
 
             document.body.appendChild(bubble);
 
-            // 获取显示时长配置
-            getGM().getValue("ChatBubbleDuration").then(duration => {
-                setTimeout(() => {
-                    bubble.remove();
-                }, duration || 5000);
-            });
+            // 3秒后自动消失
+            setTimeout(() => {
+                bubble.style.animation = 'fadeOutBubble 0.3s ease-out forwards';
+                setTimeout(() => bubble.remove(), 300);
+            }, 3000);
         }
 
         constructor() {
@@ -1393,7 +1464,7 @@ async function clearRoomChatHistory(roomId) {
                     wrapper.getElementById('expand-button').addEventListener('click', () => expand());
                     sendBtn.onclick = async () => {
                         extension.currentSendingMsgId = generateUUID();
-                        const nickname = await getGM().getValue("ChatNickname") || "匿名用户";
+                        const nickname = await getNickname();
                         const content = msgInput.value;
                         const wrappedMsg = wrapMessage(nickname, content);
                         sendMessageToTop(MessageType.SendTxtMsg, { currentSendingMsgId: extension.currentSendingMsgId, value: wrappedMsg });
@@ -1487,11 +1558,39 @@ async function clearRoomChatHistory(roomId) {
                 });
                 wrapper.querySelector("#textMessageSend").onclick = async () => {
                     extension.currentSendingMsgId = generateUUID();
-                    const nickname = await getGM().getValue("ChatNickname") || "匿名用户";
+                    const nickname = await getNickname();
                     const content = select("#textMessageInput").value;
                     const wrappedMsg = wrapMessage(nickname, content);
                     WS.sendTextMessage(extension.currentSendingMsgId, wrappedMsg);
                 }
+
+                // 非全屏模式的 GotTxtMsgCallback
+                GotTxtMsgCallback = async (id, msg) => {
+                    console.log(id, msg);
+                    const parsed = parseMessage(msg);
+                    const roomId = extension.ctxRoomId || "default";
+                    const isSelf = id == extension.currentSendingMsgId;
+
+                    // 存储到历史记录
+                    await addMessageToHistory(roomId, parsed.sender, parsed.content, isSelf);
+
+                    // 渲染到 UI
+                    const chatHistoryEl = select("#chatHistory");
+                    if (chatHistoryEl) {
+                        renderChatMessage(chatHistoryEl, parsed.sender, parsed.content, isSelf);
+                    }
+
+                    // TTS 过滤
+                    const ttsContent = getTTSContent(msg);
+                    if (ttsContent && ttsContent.trim()) {
+                        extension.gotTextMsg(id, ttsContent, false, -1);
+                    }
+                    if (isSelf) {
+                        const msgInput = select("#textMessageInput");
+                        if (msgInput) msgInput.value = "";
+                    }
+                }
+
                 this.lobbyBtnGroup = wrapper.querySelector("#lobbyBtnGroup");
                 this.createRoomButton = wrapper.querySelector('#videoTogetherCreateButton');
                 this.joinRoomButton = wrapper.querySelector("#videoTogetherJoinButton");
@@ -1505,8 +1604,10 @@ async function clearRoomChatHistory(roomId) {
                 this.videoVolume = wrapper.querySelector("#videoVolume");
                 this.callVolumeSlider = wrapper.querySelector("#callVolume");
                 this.callErrorBtn = wrapper.querySelector("#callErrorBtn");
+                this.clearChatHistoryBtn = wrapper.querySelector("#clearChatHistoryBtn");
                 this.easyShareCopyBtn = wrapper.querySelector("#easyShareCopyBtn");
                 this.textMessageChat = wrapper.querySelector("#textMessageChat");
+                this.chatInputRow = wrapper.querySelector("#chatInputRow");
                 this.textMessageConnecting = wrapper.querySelector("#textMessageConnecting");
                 this.textMessageConnectingStatus = wrapper.querySelector("#textMessageConnectingStatus");
                 this.zhcnTtsMissing = wrapper.querySelector("#zhcnTtsMissing");
@@ -1585,6 +1686,20 @@ async function clearRoomChatHistory(roomId) {
                 this.callErrorBtn.onclick = () => {
                     Voice.join("", window.videoTogetherExtension.roomName);
                 }
+                this.clearChatHistoryBtn.onclick = async () => {
+                    const roomId = extension.ctxRoomId || "default";
+                    const history = await getChatHistory();
+                    if (history[roomId]) {
+                        history[roomId].messages = [];
+                        history[roomId].lastActivity = Date.now();
+                        await saveChatHistory(history);
+                    }
+                    const chatHistoryEl = select("#chatHistory");
+                    if (chatHistoryEl) {
+                        chatHistoryEl.innerHTML = "";
+                    }
+                    popupError("{$chatHistoryCleared$}");
+                }
                 this.videoVolume.oninput = () => {
                     extension.videoVolume = this.videoVolume.value;
                     sendMessageToTop(MessageType.ChangeVideoVolume, { volume: extension.getVideoVolume() / 100 });
@@ -1639,6 +1754,8 @@ async function clearRoomChatHistory(roomId) {
                 });
                 this.videoTogetherRoleText = wrapper.querySelector("#videoTogetherRoleText")
                 this.videoTogetherSetting = wrapper.querySelector("#videoTogetherSetting");
+                this.roomNameDisplay = wrapper.querySelector("#roomNameDisplay");
+                this.roomInputContainer = wrapper.querySelector("#roomInputContainer");
                 hide(this.videoTogetherSetting);
                 this.inputRoomName = wrapper.querySelector('#videoTogetherRoomNameInput');
                 this.inputRoomPassword = wrapper.querySelector("#videoTogetherRoomPdIpt");
@@ -1707,6 +1824,7 @@ async function clearRoomChatHistory(roomId) {
 
         setTxtMsgInterface(type) {
             hide(this.textMessageChat);
+            hide(this.chatInputRow);
             hide(this.textMessageConnecting);
             hide(this.textMessageConnectingStatus);
             hide(this.zhcnTtsMissing);
@@ -1715,6 +1833,7 @@ async function clearRoomChatHistory(roomId) {
             }
             if (type == 1) {
                 show(this.textMessageChat);
+                show(this.chatInputRow);
                 // 加载聊天历史
                 this.loadChatHistory();
             }
@@ -1737,92 +1856,95 @@ async function clearRoomChatHistory(roomId) {
         loadChatHistory() {
             const chatHistoryEl = select("#chatHistory");
             if (!chatHistoryEl) return;
-            chatHistoryEl.innerHTML = "";
             const roomId = extension.ctxRoomId || "default";
             getRoomChatHistory(roomId).then(messages => {
-                messages.forEach(msg => {
-                    renderChatMessage(chatHistoryEl, msg.sender, msg.content, msg.isSelf);
-                });
+                // Only load if chat is empty (avoid clearing newly rendered messages)
+                if (chatHistoryEl.children.length === 0) {
+                    messages.forEach(msg => {
+                        renderChatMessage(chatHistoryEl, msg.sender, msg.content, msg.isSelf);
+                    });
+                }
             }).catch(() => {});
         }
 
         initNicknameDropdown() {
             if (!this.wrapper) return;
 
-            // For extension context, use browser.storage.local directly
-            // For userscript context, use GM API
-            const storage = typeof browser !== 'undefined' && browser.storage
-                ? browser.storage.local
-                : (typeof GM !== 'undefined' ? GM : null);
+            // Use window.getGM if available, otherwise fall back to browser.storage.local or GM
+            console.log("initNicknameDropdown checking storage:");
+            console.log("  window.getGM exists:", !!window.getGM);
+            console.log("  browser exists:", typeof browser !== 'undefined');
+
+            let storage = null;
+            if (window.getGM) {
+                storage = window.getGM();
+            } else if (typeof browser !== 'undefined' && browser && browser.storage && browser.storage.local) {
+                storage = browser.storage.local;
+            } else if (typeof GM !== 'undefined') {
+                storage = GM;
+            } else {
+                // Fallback to localStorage
+                storage = {
+                    get: async (key) => {
+                        const value = localStorage.getItem(key);
+                        return value ? JSON.parse(value) : null;
+                    },
+                    set: async (key, value) => {
+                        localStorage.setItem(key, JSON.stringify(value));
+                    }
+                };
+            }
+
+            console.log("initNicknameDropdown storage:", storage);
 
             const nicknameBtn = this.wrapper.querySelector("#nicknameBtn");
-            const nicknameMenu = this.wrapper.querySelector("#nicknameMenu");
             const nicknameText = this.wrapper.querySelector("#nicknameText");
-            const nicknameInputContainer = this.wrapper.querySelector("#nicknameInputContainer");
+            const nicknameEditRow = this.wrapper.querySelector("#nicknameEditRow");
             const nicknameInput = this.wrapper.querySelector("#nicknameInput");
-            const editNicknameBtn = this.wrapper.querySelector("#editNicknameBtn");
             const saveNicknameBtn = this.wrapper.querySelector("#saveNicknameBtn");
-            const cancelNicknameBtn = this.wrapper.querySelector("#cancelNicknameBtn");
             const cancelNicknameEditBtn = this.wrapper.querySelector("#cancelNicknameEditBtn");
 
-            if (!nicknameBtn || !nicknameMenu) return;
+            if (!nicknameBtn || !nicknameEditRow) return;
 
-            // Load saved nickname (browser.storage.local.get returns object with key)
+            // Load saved nickname
             if (storage) {
                 storage.get("ChatNickname").then(result => {
-                    if (result.ChatNickname) {
+                    if (result && result.ChatNickname) {
                         nicknameText.textContent = result.ChatNickname;
                     }
                 });
             }
 
-            // Toggle nickname menu
-            nicknameBtn.addEventListener("click", (e) => {
-                e.stopPropagation();
-                nicknameMenu.classList.toggle("show");
-            });
-
-            // Edit nickname
-            editNicknameBtn.addEventListener("click", () => {
-                nicknameMenu.classList.remove("show");
-                nicknameInputContainer.classList.add("show");
-                nicknameInput.value = nicknameText.textContent === "匿名用户" ? "" : nicknameText.textContent;
-                nicknameInput.focus();
-            });
-
-            // Cancel nickname menu
-            cancelNicknameBtn.addEventListener("click", () => {
-                nicknameMenu.classList.remove("show");
+            // Click nickname button to show edit row
+            nicknameBtn.addEventListener("click", () => {
+                nicknameEditRow.style.display = nicknameEditRow.style.display === "none" ? "flex" : "none";
+                if (nicknameEditRow.style.display === "flex") {
+                    nicknameInput.value = nicknameText.textContent === "匿名用户" ? "" : nicknameText.textContent;
+                    nicknameInput.focus();
+                }
             });
 
             // Cancel nickname edit
             cancelNicknameEditBtn.addEventListener("click", () => {
-                nicknameInputContainer.classList.remove("show");
+                nicknameEditRow.style.display = "none";
             });
 
             // Save nickname
             saveNicknameBtn.addEventListener("click", async () => {
                 const newNickname = nicknameInput.value.trim() || "匿名用户";
+                console.log("Saving nickname:", newNickname, "storage:", storage);
                 if (storage) {
-                    await storage.set({ ChatNickname: newNickname });
+                    await storage.set("ChatNickname", { ChatNickname: newNickname });
+                    console.log("Nickname saved successfully");
                 }
                 nicknameText.textContent = newNickname;
-                nicknameInputContainer.classList.remove("show");
+                nicknameEditRow.style.display = "none";
             });
 
             // Save on Enter key
             nicknameInput.addEventListener("keyup", (e) => {
                 if (e.key === "Enter") {
                     saveNicknameBtn.click();
-                }
-            });
-
-            // Close dropdown when clicking outside
-            document.addEventListener("click", (e) => {
-                const nicknameDropdown = select("#nicknameDropdown");
-                if (nicknameDropdown && !nicknameDropdown.contains(e.target)) {
-                    nicknameMenu.classList.remove("show");
-                    nicknameInputContainer.classList.remove("show");
                 }
             });
         }
@@ -1924,6 +2046,11 @@ async function clearRoomChatHistory(roomId) {
             } catch { };
             this.Maximize();
             this.inputRoomName.disabled = true;
+            this.inputRoomName.style.display = "none";
+            this.inputRoomNameLabel.style.display = "none";
+            this.roomInputContainer.style.display = "none";
+            this.roomNameDisplay.style.display = "inline";
+            this.roomNameDisplay.textContent = this.inputRoomName.value;
             hide(this.lobbyBtnGroup)
             show(this.roomButtonGroup);
             this.exitButton.style = "";
@@ -1939,6 +2066,10 @@ async function clearRoomChatHistory(roomId) {
                 this.Maximize();
             }
             this.inputRoomName.disabled = false;
+            this.inputRoomName.style.display = "inline";
+            this.inputRoomNameLabel.style.display = "inline";
+            this.roomInputContainer.style.display = "flex";
+            this.roomNameDisplay.style.display = "none";
             this.inputRoomPasswordLabel.style.display = "inline-block";
             this.inputRoomPassword.style.display = "inline-block";
             this.inputRoomName.placeholder = "{$room_input_placeholder$}"
