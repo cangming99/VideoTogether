@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Video Together 一起看视频
 // @namespace    https://2gether.video/
-// @version      1776996682
+// @version      1776997135
 // @description  Watch video together 一起看视频
 // @author       maggch@outlook.com
 // @match        *://*/*
@@ -3534,7 +3534,7 @@ async function clearRoomChatHistory(roomId) {
 
             this.activatedVideo = undefined;
             this.tempUser = generateTempUserId();
-            this.version = '1776996682';
+            this.version = '1776997135';
             this.isMain = (window.self == window.top);
             this.UserId = undefined;
 
@@ -4286,11 +4286,11 @@ async function clearRoomChatHistory(roomId) {
                         }
                     } catch (e) { };
                     try {
-                        if (data.PublicMessageVoice != null) {
+                        if (data.PublicMessageVoice != null && windowPannel && windowPannel.voiceSelect) {
                             windowPannel.voiceSelect.value = data.PublicMessageVoice;
                         }
                     } catch { };
-                    if (!window.videoTogetherFlyPannel.disableDefaultSize && firstSync) {
+                    if (window.videoTogetherFlyPannel && !window.videoTogetherFlyPannel.disableDefaultSize && firstSync) {
                         if (data.MinimiseDefault) {
                             window.videoTogetherFlyPannel.Minimize(true);
                         } else {

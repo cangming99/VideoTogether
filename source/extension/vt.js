@@ -2856,11 +2856,11 @@ async function clearRoomChatHistory(roomId) {
                         }
                     } catch (e) { };
                     try {
-                        if (data.PublicMessageVoice != null) {
+                        if (data.PublicMessageVoice != null && windowPannel && windowPannel.voiceSelect) {
                             windowPannel.voiceSelect.value = data.PublicMessageVoice;
                         }
                     } catch { };
-                    if (!window.videoTogetherFlyPannel.disableDefaultSize && firstSync) {
+                    if (window.videoTogetherFlyPannel && !window.videoTogetherFlyPannel.disableDefaultSize && firstSync) {
                         if (data.MinimiseDefault) {
                             window.videoTogetherFlyPannel.Minimize(true);
                         } else {
