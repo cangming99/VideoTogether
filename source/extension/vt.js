@@ -636,8 +636,10 @@
                 m3u8ContentCache[data['data'].m3u8Url] = data['data'].content;
             }
             if (data['method'] == 'send_txtmsg' && getEnableTextMessage()) {
-                popupError("{$new_message_change_voice$}");
-                extension.gotTextMsg(data['data'].id, data['data'].msg, false, -1, data['data'].audioUrl);
+                const isSelf = data['data'].id == extension.currentSendingMsgId;
+                if (!isSelf) {
+                    popupError("{$new_message_change_voice$}");
+                }
                 sendMessageToTop(MessageType.GotTxtMsg, { id: data['data'].id, msg: data['data'].msg });
             }
         },
@@ -1335,11 +1337,6 @@ async function clearRoomChatHistory(roomId) {
         return `{vt:${nickname}}${content}`;
     }
 
-    function getTTSContent(raw) {
-        const match = raw.match(/^\{vt:([^}]+)\}(.*)$/);
-        return match ? match[2] : raw;
-    }
-
     let GotTxtMsgCallback = undefined;
 
     function renderChatMessage(chatHistoryEl, sender, content, isSelf) {
@@ -1358,20 +1355,25 @@ async function clearRoomChatHistory(roomId) {
 
     class VideoTogetherFlyPannel {
         showBubbleNotification(sender, content) {
-            const smallIcon = select("#videoTogetherSamllIcon");
-            if (!smallIcon) return;
+            // 清理超过5个的旧气泡
+            const existingBubbles = document.querySelectorAll(".chatBubble");
+            if (existingBubbles.length >= 5) {
+                existingBubbles[0].remove();
+            }
 
-            // 移除已有的气泡
-            const existingBubble = select("#chatBubble");
-            if (existingBubble) existingBubble.remove();
+            // 给所有现有气泡上移
+            existingBubbles.forEach(b => {
+                const currentBottom = parseInt(b.style.bottom) || 60;
+                b.style.bottom = (currentBottom + 55) + 'px';
+            });
 
-            // 创建气泡 - 现代简约风格
+            // 创建气泡
             const bubble = document.createElement("div");
-            bubble.id = "chatBubble";
+            bubble.className = "chatBubble";
             bubble.style.cssText = `
                 position: fixed;
-                bottom: 60px;
                 right: 20px;
+                bottom: 60px;
                 background: rgba(30, 30, 30, 0.85);
                 backdrop-filter: blur(10px);
                 border-radius: 12px;
@@ -1381,37 +1383,39 @@ async function clearRoomChatHistory(roomId) {
                 font-size: 13px;
                 z-index: 2147483647;
                 color: #fff;
-                animation: slideInFadeOut 0.3s ease-out forwards;
+                opacity: 0;
+                transform: translateY(10px);
+                transition: opacity 0.3s ease-out, transform 0.3s ease-out, bottom 0.3s ease-out;
             `;
-
-            // 添加淡出动画样式
-            if (!document.getElementById('bubbleAnimStyle')) {
-                const style = document.createElement('style');
-                style.id = 'bubbleAnimStyle';
-                style.textContent = `
-                    @keyframes slideInFadeOut {
-                        0% { opacity: 0; transform: translateY(10px); }
-                        10% { opacity: 1; transform: translateY(0); }
-                        80% { opacity: 1; }
-                        100% { opacity: 0; }
-                    }
-                    @keyframes fadeOutBubble {
-                        0% { opacity: 1; }
-                        100% { opacity: 0; }
-                    }
-                `;
-                document.head.appendChild(style);
-            }
 
             bubble.innerHTML = `<span style="color: #4ecdc4; font-weight: 600;">${escapeHtml(sender)}</span>: ${escapeHtml(content)}`;
 
             document.body.appendChild(bubble);
 
-            // 3秒后自动消失
-            setTimeout(() => {
-                bubble.style.animation = 'fadeOutBubble 0.3s ease-out forwards';
-                setTimeout(() => bubble.remove(), 300);
-            }, 3000);
+            // 立即显示
+            requestAnimationFrame(() => {
+                bubble.style.opacity = '1';
+                bubble.style.transform = 'translateY(0)';
+            });
+
+            // 3秒后自动消失，悬浮时持续存在
+            let hideTimer;
+            const startHideTimer = () => {
+                hideTimer = setTimeout(() => {
+                    bubble.style.opacity = '0';
+                    bubble.style.transform = 'translateY(10px)';
+                    setTimeout(() => bubble.remove(), 300);
+                }, 3000);
+            };
+            const clearHideTimer = () => {
+                clearTimeout(hideTimer);
+                bubble.style.opacity = '1';
+                bubble.style.transform = 'translateY(0)';
+            };
+
+            bubble.addEventListener('mouseenter', clearHideTimer);
+            bubble.addEventListener('mouseleave', startHideTimer);
+            startHideTimer();
         }
 
         constructor() {
@@ -1447,16 +1451,18 @@ async function clearRoomChatHistory(roomId) {
                     let sendBtn = wrapper.getElementById('send-button');
                     let closeBtn = wrapper.getElementById('close-btn');
                     let expanded = true;
+                    const chatHistoryEl = wrapper.getElementById('chatHistory');
                     function expand() {
                         if (expanded) {
                             expandBtn.innerText = '>'
                             sendBtn.style.display = 'none';
                             msgInput.classList.remove('expand');
-
+                            if (chatHistoryEl) chatHistoryEl.classList.remove('show');
                         } else {
                             expandBtn.innerText = '<';
                             sendBtn.style.display = 'inline-block';
                             msgInput.classList.add("expand");
+                            if (chatHistoryEl) chatHistoryEl.classList.add('show');
                         }
                         expanded = !expanded;
                     }
@@ -1475,29 +1481,24 @@ async function clearRoomChatHistory(roomId) {
                         const roomId = extension.ctxRoomId || "default";
                         const isSelf = id == extension.currentSendingMsgId;
 
-                        // 自己发的消息不显示气泡
-                        if (!isSelf) {
-                            const chatHistoryEl = select("#chatHistory");
-                            // 如果聊天区域不可见，显示气泡
-                            if (!chatHistoryEl || chatHistoryEl.offsetParent === null) {
-                                this.showBubbleNotification(parsed.sender, parsed.content);
-                            }
-                        }
-
                         // 存储到历史记录
                         await addMessageToHistory(roomId, parsed.sender, parsed.content, isSelf);
 
                         // 渲染到 UI
-                        const chatHistoryEl = select("#chatHistory");
                         if (chatHistoryEl) {
                             renderChatMessage(chatHistoryEl, parsed.sender, parsed.content, isSelf);
                         }
 
-                        // TTS 过滤
-                        const ttsContent = getTTSContent(msg);
-                        if (ttsContent && ttsContent.trim()) {
-                            extension.gotTextMsg(id, ttsContent, false, -1);
+                        // 气泡通知（仅接收方，全屏面板收起时显示）
+                        if (!isSelf && expanded) {
+                            this.showBubbleNotification(parsed.sender, parsed.content);
                         }
+
+                        // TTS（发送人自己不发TTS）
+                        if (!isSelf) {
+                            extension.gotTextMsg(id, parsed.content, false, -1);
+                        }
+
                         if (isSelf) {
                             msgInput.value = "";
                         }
@@ -1580,11 +1581,19 @@ async function clearRoomChatHistory(roomId) {
                         renderChatMessage(chatHistoryEl, parsed.sender, parsed.content, isSelf);
                     }
 
-                    // TTS 过滤
-                    const ttsContent = getTTSContent(msg);
-                    if (ttsContent && ttsContent.trim()) {
-                        extension.gotTextMsg(id, ttsContent, false, -1);
+                    // 气泡通知（仅接收方，面板收起时显示）
+                    if (!isSelf) {
+                        const chatHistoryEl = select("#chatHistory");
+                        if (!chatHistoryEl || chatHistoryEl.offsetParent === null) {
+                            this.showBubbleNotification(parsed.sender, parsed.content);
+                        }
                     }
+
+                    // TTS（发送人自己不发TTS）
+                    if (!isSelf) {
+                        extension.gotTextMsg(id, parsed.content, false, -1);
+                    }
+
                     if (isSelf) {
                         const msgInput = select("#textMessageInput");
                         if (msgInput) msgInput.value = "";

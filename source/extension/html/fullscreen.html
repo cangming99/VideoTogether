@@ -79,8 +79,46 @@
     .container button:disabled:hover {
         background-color: rgb(76, 76, 76);
     }
+
+    .container #chatHistory {
+        display: none;
+        position: absolute;
+        bottom: 40px;
+        right: 0;
+        width: 220px;
+        max-height: 200px;
+        overflow-y: auto;
+        background: rgba(30, 30, 30, 0.9);
+        border-radius: 8px;
+        padding: 8px;
+        color: #fff;
+        font-size: 12px;
+    }
+
+    .container #chatHistory.show {
+        display: block;
+    }
+
+    .container .chat-message {
+        margin-bottom: 6px;
+        padding: 4px 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        word-break: break-all;
+    }
+
+    .container .chat-message .sender {
+        font-weight: 600;
+        color: #4ecdc4;
+        font-size: 11px;
+    }
+
+    .container .chat-message .content {
+        margin-top: 2px;
+    }
 </style>
 <div class="container" id="container">
+    <div id="chatHistory"></div>
     <button id="expand-button">&lt;</button>
     <div style="padding: 0 5px 0 5px;" class="user-info" id="user-info">
         <span class="emoji">👥</span>
