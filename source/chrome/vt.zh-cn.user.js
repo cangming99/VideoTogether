@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Video Together 一起看视频
 // @namespace    https://2gether.video/
-// @version      1777038593
+// @version      1777046977
 // @description  Watch video together 一起看视频
 // @author       maggch@outlook.com
 // @match        *://*/*
@@ -2015,7 +2015,7 @@ async function clearRoomChatHistory(roomId) {
                     }
                     // 加载聊天历史
                     if (chatHistoryEl) {
-                        const roomId = extension.ctxRoomId || "default";
+                        const roomId = extension.roomName || "default";
                         getRoomChatHistory(roomId).then(messages => {
                             if (chatHistoryEl.children.length === 0) {
                                 messages.forEach(msg => {
@@ -2052,7 +2052,7 @@ async function clearRoomChatHistory(roomId) {
                     GotTxtMsgCallback = async (id, msg) => {
                         console.log(id, msg);
                         const parsed = parseMessage(msg);
-                        const roomId = extension.ctxRoomId || "default";
+                        const roomId = extension.roomName || "default";
                         const isSelf = id == extension.currentSendingMsgId;
 
                         // 存储到历史记录
@@ -2136,12 +2136,6 @@ async function clearRoomChatHistory(roomId) {
       </svg>
     </button>
 
-    <button id="videoTogetherMinimize" type="button" aria-label="Minimize" class="vt-modal-title-button" style="padding: 4px;">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M18 12.998H6a1 1 0 0 1 0-2h12a1 1 0 0 1 0 2z"></path>
-      </svg>
-    </button>
-
     <a href="https://setting.2gether.video/" target="_blank" id="videoTogetherSetting" aria-label="Setting" class="vt-modal-title-button" style="padding: 4px;">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
         <path d="M24 13.616v-3.232c-1.651-.587-2.694-.752-3.219-2.019v-.001c-.527-1.271.1-2.134.847-3.707l-2.285-2.285c-1.561.742-2.433 1.375-3.707.847h-.001c-1.269-.526-1.435-1.576-2.019-3.219h-3.232c-.582 1.635-.749 2.692-2.019 3.219h-.001c-1.271.528-2.132-.098-3.707-.847l-2.285 2.285c.745 1.568 1.375 2.434.847 3.707-.527 1.271-1.584 1.438-3.219 2.02v3.232c1.632.58 2.692.749 3.219 2.019.53 1.282-.114 2.166-.847 3.707l2.285 2.286c1.562-.743 2.434-1.375 3.707-.847h.001c1.27.526 1.436 1.579 2.019 3.219h3.232c.582-1.636.75-2.69 2.027-3.222h.001c1.262-.524 2.12.101 3.698.851l2.285-2.286c-.744-1.563-1.375-2.433-.848-3.706.527-1.271 1.588-1.44 3.221-2.021zm-12 2.384c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4z" />
@@ -2153,6 +2147,12 @@ async function clearRoomChatHistory(roomId) {
         <path fill="red" d="M12 4.435c-1.989-5.399-12-4.597-12 3.568 0 4.068 3.06 9.481 12 14.997 8.94-5.516 12-10.929 12-14.997 0-8.118-10-8.999-12-3.568z" />
       </svg>
     </a>
+
+    <button id="videoTogetherMinimize" type="button" aria-label="Minimize" class="vt-modal-title-button" style="padding: 4px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M18 12.998H6a1 1 0 0 1 0-2h12a1 1 0 0 1 0 2z"></path>
+      </svg>
+    </button>
   </div>
 
   <div id="nicknameEditRow" class="nickname-edit-row" style="display: none;">
@@ -2167,14 +2167,14 @@ async function clearRoomChatHistory(roomId) {
     <div class="vt-modal-body">
       <div id="mainPannel" class="content" style="display: flex; flex-direction: column; width: 100%; flex: 1; min-height: 0; gap: 8px;">
         <div id="videoTogetherStatusText" style="color: #666; font-size: 12px;"><a target='_blank' href='https://www.bilibili.com/opus/1015853606261227527'>特大好消息</a></div>
-        <div id="roomInputContainer" style="display: flex; flex-direction: column; gap: 4px;">
-          <div style="display: flex; align-items: center; gap: 4px;">
-            <span class="ellipsis" id="videoTogetherRoomNameLabel" style="width: 60px;">房间</span>
-            <input id="videoTogetherRoomNameInput" autocomplete="off" placeholder="请输入房间名" style="flex: 1;">
+        <div id="roomInputContainer" style="display: flex; flex-direction: column; gap: 8px; padding: 10px 0; width: 100%;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="ellipsis" id="videoTogetherRoomNameLabel" style="width: 70px; flex-shrink: 0;">房间</span>
+            <input id="videoTogetherRoomNameInput" autocomplete="off" placeholder="请输入房间名" style="flex: 1; height: 36px; padding: 0 12px; font-size: 14px; border-radius: 8px; border: 1px solid #d9d9d9;">
           </div>
-          <div style="display: flex; align-items: center; gap: 4px;">
-            <span class="ellipsis" id="videoTogetherRoomPasswordLabel" style="width: 60px; display: none;">密码</span>
-            <input id="videoTogetherRoomPdIpt" autocomplete="off" placeholder="输入建房密码" style="flex: 1; display: none;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="ellipsis" id="videoTogetherRoomPasswordLabel" style="width: 70px; flex-shrink: 0; display: none;">密码</span>
+            <input id="videoTogetherRoomPdIpt" autocomplete="off" placeholder="输入建房密码" style="flex: 1; height: 36px; padding: 0 12px; font-size: 14px; border-radius: 8px; border: 1px solid #d9d9d9; display: none;">
           </div>
         </div>
         <div id="textMessageChat" style="display: none; flex-direction: column; flex: 1; min-height: 0; overflow: hidden;">
@@ -2233,36 +2233,38 @@ async function clearRoomChatHistory(roomId) {
 
     <div class="vt-modal-footer">
 
-      <div id="chatInputRow" style="display: none; gap: 6px; width: 100%;">
-        <input id="textMessageInput" autocomplete="off" placeholder="文字聊天" style="flex: 1;">
-        <button id="textMessageSend" class="vt-btn vt-btn-primary" type="button">
+      <div id="chatInputRow" style="display: flex; gap: 6px; width: 100%; align-items: center; flex-direction: row; flex-wrap: nowrap; box-sizing: border-box;">
+        <input id="textMessageInput" autocomplete="off" placeholder="文字聊天" style="flex: 1; min-width: 60px; height: 34px; padding: 0 10px; font-size: 13px; border-radius: 6px; border: 1px solid #d9d9d9;">
+        <button id="textMessageSend" class="vt-btn vt-btn-primary" type="button" style="height: 34px; padding: 0 16px; font-size: 13px; border-radius: 6px; flex-shrink: 0;">
           <span>发送</span>
         </button>
       </div>
 
       <div id="lobbyBtnGroup" style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;">
-        <button id="videoTogetherCreateButton" class="vt-btn vt-btn-primary" type="button">
+        <button id="videoTogetherCreateButton" class="vt-btn vt-btn-primary" type="button" style="height: 34px; padding: 0 14px; font-size: 14px; border-radius: 10px;">
           <span>建 房</span>
         </button>
-        <button id="videoTogetherJoinButton" class="vt-btn vt-btn-secondary" type="button">
+        <button id="videoTogetherJoinButton" class="vt-btn vt-btn-secondary" type="button" style="height: 34px; padding: 0 14px; font-size: 14px; border-radius: 10px;">
           <span>加 入</span>
+        </button>
+        <button id="chatHistoryBtn" class="vt-btn" type="button" style="height: 34px; padding: 0 14px; font-size: 14px; border-radius: 10px;">
+          <span>聊天记录</span>
         </button>
       </div>
 
-
       <div id="roomButtonGroup" style="display: none; flex-direction: column; gap: 6px;">
         <div style="display: flex; gap: 6px; justify-content: center;">
-          <button id="videoTogetherExitButton" class="vt-btn vt-btn-dangerous" type="button">
+          <button id="videoTogetherExitButton" class="vt-btn vt-btn-dangerous" type="button" style="height: 34px; padding: 0 14px; font-size: 14px; border-radius: 10px;">
             <span>退 出</span>
           </button>
-          <button id="callBtn" class="vt-btn vt-btn-dangerous" type="button">
+          <button id="callBtn" class="vt-btn vt-btn-dangerous" type="button" style="height: 34px; padding: 0 14px; font-size: 14px; border-radius: 10px;">
             <span>通 话</span>
           </button>
-          <button id="videoTogetherHelpButton" class="vt-btn" type="button">
-            <span>帮 助</span>
+          <button id="ttsBtn" class="vt-btn" type="button" style="height: 34px; padding: 0 14px; font-size: 14px; border-radius: 10px;">
+            <span>TTS</span>
           </button>
-          <button id="clearChatHistoryBtn" class="vt-btn" type="button">
-            <span>清空聊天记录</span>
+          <button id="chatHistoryBtnRoom" class="vt-btn" type="button" style="height: 34px; padding: 0 14px; font-size: 14px; border-radius: 10px;">
+            <span>聊天记录</span>
           </button>
         </div>
         <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
@@ -2495,9 +2497,9 @@ async function clearRoomChatHistory(roomId) {
 
   #textMessageInput {
     border-radius: 8px;
-    padding: 4px 8px;
-    border: 1px solid #ddd;
-    font-size: 12px;
+    padding: 0 12px;
+    border: 1px solid #d9d9d9;
+    font-size: 14px;
     box-sizing: border-box;
   }
 
@@ -2537,11 +2539,12 @@ async function clearRoomChatHistory(roomId) {
     color: #fff;
     border-color: #ff4d4f;
     background-color: #ff4d4f;
-    height: 26px !important;
-    padding: 0 8px !important;
-    font-size: 12px !important;
-    line-height: 26px !important;
-    min-width: 52px !important;
+    height: 34px !important;
+    padding: 0 14px !important;
+    font-size: 14px !important;
+    line-height: 34px !important;
+    border-radius: 10px !important;
+    min-width: auto !important;
     box-sizing: border-box !important;
   }
 
@@ -2551,7 +2554,7 @@ async function clearRoomChatHistory(roomId) {
   }
 
   .vt-btn-dangerous span {
-    line-height: 26px !important;
+    line-height: 34px !important;
   }
 
   .vt-modal-content-item {
@@ -2591,7 +2594,7 @@ async function clearRoomChatHistory(roomId) {
 
   #videoTogetherRoomNameInput,
   #videoTogetherRoomPdIpt {
-    width: 150px;
+    width: auto;
     height: auto;
     font-family: inherit;
     font-size: inherit;
@@ -2995,11 +2998,32 @@ async function clearRoomChatHistory(roomId) {
                     WS.sendTextMessage(extension.currentSendingMsgId, wrappedMsg);
                 }
 
+                // TTS 按钮
+                const ttsBtn = wrapper.querySelector("#ttsBtn");
+                if (ttsBtn) {
+                    let ttsEnabled = window.VideoTogetherStorage?.PublicEnableTTS !== false;
+                    const updateTtsBtnStyle = () => {
+                        ttsBtn.style.backgroundColor = ttsEnabled ? "#1890ff" : "#999";
+                        ttsBtn.style.color = "#fff";
+                        ttsBtn.style.borderColor = ttsEnabled ? "#1890ff" : "#999";
+                    };
+                    updateTtsBtnStyle();
+                    ttsBtn.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        ttsEnabled = !ttsEnabled;
+                        if (window.VideoTogetherStorage) {
+                            window.VideoTogetherStorage.PublicEnableTTS = ttsEnabled;
+                            sendMessageToTop(MessageType.SetStorageValue, { key: "PublicEnableTTS", value: ttsEnabled });
+                        }
+                        updateTtsBtnStyle();
+                    });
+                }
+
                 // 非全屏模式的 GotTxtMsgCallback
                 GotTxtMsgCallback = async (id, msg) => {
                     console.log(id, msg);
                     const parsed = parseMessage(msg);
-                    const roomId = extension.ctxRoomId || "default";
+                    const roomId = extension.roomName || "default";
                     const isSelf = id == extension.currentSendingMsgId;
 
                     // 存储到历史记录
@@ -3037,13 +3061,13 @@ async function clearRoomChatHistory(roomId) {
                 this.exitButton = wrapper.querySelector("#videoTogetherExitButton");
                 this.callBtn = wrapper.querySelector("#callBtn");
                 this.callBtn.onclick = () => Voice.join("", window.videoTogetherExtension.roomName);
-                this.helpButton = wrapper.querySelector("#videoTogetherHelpButton");
                 this.audioBtn = wrapper.querySelector("#audioBtn");
                 this.micBtn = wrapper.querySelector("#micBtn");
                 this.videoVolume = wrapper.querySelector("#videoVolume");
                 this.callVolumeSlider = wrapper.querySelector("#callVolume");
                 this.callErrorBtn = wrapper.querySelector("#callErrorBtn");
-                this.clearChatHistoryBtn = wrapper.querySelector("#clearChatHistoryBtn");
+                this.chatHistoryBtn = wrapper.querySelector("#chatHistoryBtn");
+                this.chatHistoryBtnRoom = wrapper.querySelector("#chatHistoryBtnRoom");
                 this.easyShareCopyBtn = wrapper.querySelector("#easyShareCopyBtn");
                 this.textMessageChat = wrapper.querySelector("#textMessageChat");
                 this.chatInputRow = wrapper.querySelector("#chatInputRow");
@@ -3125,20 +3149,136 @@ async function clearRoomChatHistory(roomId) {
                 this.callErrorBtn.onclick = () => {
                     Voice.join("", window.videoTogetherExtension.roomName);
                 }
-                this.clearChatHistoryBtn.onclick = async () => {
-                    const roomId = extension.ctxRoomId || "default";
+                this.chatHistoryBtn.onclick = async () => {
                     const history = await getChatHistory();
-                    if (history[roomId]) {
-                        history[roomId].messages = [];
-                        history[roomId].lastActivity = Date.now();
-                        await saveChatHistory(history);
+                    const roomIds = Object.keys(history).filter(k => history[k]?.messages?.length > 0);
+
+                    // 创建模态框
+                    const modal = document.createElement("div");
+                    modal.style.cssText = `
+                        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                        background: rgba(0,0,0,0.5); z-index: 2147483647;
+                        display: flex; align-items: center; justify-content: center;
+                    `;
+
+                    const modalContent = document.createElement("div");
+                    modalContent.style.cssText = `
+                        background: #fff; border-radius: 12px; padding: 20px;
+                        max-width: 500px; max-height: 80vh; overflow-y: auto;
+                        color: #1a1a1a; font-size: 14px; width: 90%;
+                        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+                    `;
+
+                    modalContent.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3 style="margin: 0; color: #1a1a1a;">聊天记录管理</h3>
+                            <button id="modal-close-btn" style="
+                                background: transparent; border: none; color: #666;
+                                font-size: 24px; cursor: pointer; padding: 0 5px; line-height: 1;
+                            ">×</button>
+                        </div>
+                        <div id="room-list"></div>
+                    `;
+
+                    modal.appendChild(modalContent);
+                    document.body.appendChild(modal);
+
+                    const roomList = modalContent.querySelector("#room-list");
+                    const closeModal = () => modal.remove();
+                    modalContent.querySelector("#modal-close-btn").onclick = closeModal;
+                    modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+
+                    if (roomIds.length === 0) {
+                        roomList.innerHTML = `<div style="text-align: center; color: #999; padding: 30px;">暂无聊天记录</div>`;
+                        return;
                     }
-                    const chatHistoryEl = select("#chatHistory");
-                    if (chatHistoryEl) {
-                        chatHistoryEl.innerHTML = "";
-                    }
-                    popupError("聊天记录已清空");
+
+                    roomIds.forEach(roomId => {
+                        const room = history[roomId];
+                        const msgCount = room.messages.length;
+                        const lastTime = room.lastActivity ? new Date(room.lastActivity).toLocaleString() : "-";
+
+                        const roomItem = document.createElement("div");
+                        roomItem.style.cssText = `
+                            background: #f5f5f5; border-radius: 8px; padding: 12px; margin-bottom: 10px;
+                            border: 1px solid #e0e0e0;
+                        `;
+                        roomItem.innerHTML = `
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <div>
+                                    <div style="font-weight: 600; color: #1890ff; word-break: break-all;">${escapeHtml(roomId)}</div>
+                                    <div style="font-size: 12px; color: #888;">${msgCount} 条消息 | ${lastTime}</div>
+                                </div>
+                            </div>
+                            <div id="preview-${roomId}" style="display: none; background: #fff; border-radius: 6px; padding: 10px; margin-bottom: 10px; max-height: 200px; overflow-y: auto; border: 1px solid #ddd;"></div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="preview-btn" data-room="${roomId}" style="
+                                    flex: 1; padding: 8px; border: none; border-radius: 6px;
+                                    background: #1890ff; color: #fff; cursor: pointer; font-weight: 500;
+                                ">预览</button>
+                                <button class="export-btn" data-room="${roomId}" style="
+                                    flex: 1; padding: 8px; border: none; border-radius: 6px;
+                                    background: #52c41a; color: #fff; cursor: pointer;
+                                ">导出</button>
+                                <button class="delete-btn" data-room="${roomId}" style="
+                                    flex: 1; padding: 8px; border: none; border-radius: 6px;
+                                    background: #ff4d4f; color: #fff; cursor: pointer;
+                                ">删除</button>
+                            </div>
+                        `;
+                        roomList.appendChild(roomItem);
+
+                        // 预览按钮
+                        roomItem.querySelector(".preview-btn").onclick = function() {
+                            const previewEl = roomItem.querySelector(`#preview-${roomId}`);
+                            const btn = roomItem.querySelector(".preview-btn");
+                            if (previewEl.style.display === "none") {
+                                previewEl.style.display = "block";
+                                previewEl.innerHTML = room.messages.map(m =>
+                                    `<div style="margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #eee;">
+                                        <span style="color: ${m.isSelf ? '#1890ff' : '#fa8c16'};font-weight:600;">${escapeHtml(m.sender)}</span>
+                                        <span style="color: #666; margin-left: 8px;">${escapeHtml(m.content)}</span>
+                                        <div style="font-size: 11px; color: #999; margin-top: 4px;">${m.timestamp ? new Date(m.timestamp).toLocaleString() : ''}</div>
+                                    </div>`
+                                ).join('');
+                                btn.textContent = "关闭";
+                                btn.style.background = "#999";
+                            } else {
+                                previewEl.style.display = "none";
+                                btn.textContent = "预览";
+                                btn.style.background = "#1890ff";
+                            }
+                        };
+
+                        // 导出按钮
+                        roomItem.querySelector(".export-btn").onclick = function() {
+                            const text = room.messages.map(m =>
+                                `[${m.timestamp ? new Date(m.timestamp).toLocaleString() : ''}] ${m.sender}: ${m.content}`
+                            ).join('\n');
+                            const blob = new Blob([text], { type: 'text/plain' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `chat_history_${roomId}_${Date.now()}.txt`;
+                            a.click();
+                            URL.revokeObjectURL(url);
+                            popupError("已导出到剪贴板");
+                        };
+
+                        // 删除按钮
+                        roomItem.querySelector(".delete-btn").onclick = function() {
+                            if (confirm("确定删除该房间的聊天记录吗？")) {
+                                delete history[roomId];
+                                saveChatHistory(history);
+                                roomItem.remove();
+                                if (roomList.children.length === 0) {
+                                    roomList.innerHTML = `<div style="text-align: center; color: #999; padding: 30px;">暂无聊天记录</div>`;
+                                }
+                            }
+                        };
+                    });
                 }
+                this.chatHistoryBtnRoom.onclick = this.chatHistoryBtn.onclick;
                 this.videoVolume.oninput = () => {
                     extension.videoVolume = this.videoVolume.value;
                     sendMessageToTop(MessageType.ChangeVideoVolume, { volume: extension.getVideoVolume() / 100 });
@@ -3187,7 +3327,6 @@ async function clearRoomChatHistory(roomId) {
 
                 this.createRoomButton.onclick = this.CreateRoomButtonOnClick.bind(this);
                 this.joinRoomButton.onclick = this.JoinRoomButtonOnClick.bind(this);
-                this.helpButton.onclick = this.HelpButtonOnClick.bind(this);
                 this.exitButton.onclick = (() => {
                     window.videoTogetherExtension.exitRoom();
                 });
@@ -3295,7 +3434,7 @@ async function clearRoomChatHistory(roomId) {
         loadChatHistory() {
             const chatHistoryEl = select("#chatHistory");
             if (!chatHistoryEl) return;
-            const roomId = extension.ctxRoomId || "default";
+            const roomId = extension.roomName || "default";
             getRoomChatHistory(roomId).then(messages => {
                 // Only load if chat is empty (avoid clearing newly rendered messages)
                 if (chatHistoryEl.children.length === 0) {
@@ -3490,7 +3629,7 @@ async function clearRoomChatHistory(roomId) {
             this.roomInputContainer.style.display = "none";
             this.roomNameDisplay.style.display = "inline";
             this.roomNameDisplay.textContent = this.inputRoomName.value;
-            hide(this.lobbyBtnGroup)
+            hide(this.lobbyBtnGroup);
             show(this.roomButtonGroup);
             this.exitButton.style = "";
             hide(this.inputRoomPasswordLabel);
@@ -3686,7 +3825,7 @@ async function clearRoomChatHistory(roomId) {
 
             this.activatedVideo = undefined;
             this.tempUser = generateTempUserId();
-            this.version = '1777038593';
+            this.version = '1777046977';
             this.isMain = (window.self == window.top);
             this.UserId = undefined;
 
@@ -3781,6 +3920,11 @@ async function clearRoomChatHistory(roomId) {
         }
 
         async gotTextMsg(id, msg, prepare = false, idx = -1, audioUrl = undefined) {
+            // 检查 TTS 按钮是否启用
+            const ttsBtn = select("#ttsBtn");
+            if (!prepare && ttsBtn && window.VideoTogetherStorage.PublicEnableTTS == false) {
+                return;
+            }
             if (idx > speechSynthesis.getVoices().length) {
                 return;
             }
