@@ -1511,6 +1511,7 @@ async function clearRoomChatHistory(roomId) {
                 this.textMessageConnectingStatus = wrapper.querySelector("#textMessageConnectingStatus");
                 this.zhcnTtsMissing = wrapper.querySelector("#zhcnTtsMissing");
                 this.downloadBtn = wrapper.querySelector("#downloadBtn");
+                this.initNicknameDropdown();
                 hide(this.downloadBtn);
                 this.confirmDownloadBtn = wrapper.querySelector("#confirmDownloadBtn")
                 this.confirmDownloadBtn.onclick = () => {
@@ -1745,71 +1746,74 @@ async function clearRoomChatHistory(roomId) {
             }).catch(() => {});
         }
 
-        // Initialize nickname dropdown
-        const nicknameBtn = select("#nicknameBtn");
-        const nicknameMenu = select("#nicknameMenu");
-        const nicknameText = select("#nicknameText");
-        const nicknameInputContainer = select("#nicknameInputContainer");
-        const nicknameInput = select("#nicknameInput");
-        const editNicknameBtn = select("#editNicknameBtn");
-        const saveNicknameBtn = select("#saveNicknameBtn");
-        const cancelNicknameBtn = select("#cancelNicknameBtn");
-        const cancelNicknameEditBtn = select("#cancelNicknameEditBtn");
+        initNicknameDropdown() {
+            const nicknameBtn = select("#nicknameBtn");
+            const nicknameMenu = select("#nicknameMenu");
+            const nicknameText = select("#nicknameText");
+            const nicknameInputContainer = select("#nicknameInputContainer");
+            const nicknameInput = select("#nicknameInput");
+            const editNicknameBtn = select("#editNicknameBtn");
+            const saveNicknameBtn = select("#saveNicknameBtn");
+            const cancelNicknameBtn = select("#cancelNicknameBtn");
+            const cancelNicknameEditBtn = select("#cancelNicknameEditBtn");
 
-        // Load saved nickname
-        getGM().getValue("ChatNickname").then(nickname => {
-            if (nickname) {
-                nicknameText.textContent = nickname;
-            }
-        });
+            if (!nicknameBtn || !nicknameMenu) return;
 
-        // Toggle nickname menu
-        nicknameBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            nicknameMenu.classList.toggle("show");
-        });
+            // Load saved nickname
+            getGM().getValue("ChatNickname").then(nickname => {
+                if (nickname) {
+                    nicknameText.textContent = nickname;
+                }
+            });
 
-        // Edit nickname
-        editNicknameBtn.addEventListener("click", () => {
-            nicknameMenu.classList.remove("show");
-            nicknameInputContainer.classList.add("show");
-            nicknameInput.value = nicknameText.textContent === "匿名用户" ? "" : nicknameText.textContent;
-            nicknameInput.focus();
-        });
+            // Toggle nickname menu
+            nicknameBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                nicknameMenu.classList.toggle("show");
+            });
 
-        // Cancel nickname menu
-        cancelNicknameBtn.addEventListener("click", () => {
-            nicknameMenu.classList.remove("show");
-        });
-
-        // Cancel nickname edit
-        cancelNicknameEditBtn.addEventListener("click", () => {
-            nicknameInputContainer.classList.remove("show");
-        });
-
-        // Save nickname
-        saveNicknameBtn.addEventListener("click", async () => {
-            const newNickname = nicknameInput.value.trim() || "匿名用户";
-            await getGM().setValue("ChatNickname", newNickname);
-            nicknameText.textContent = newNickname;
-            nicknameInputContainer.classList.remove("show");
-        });
-
-        // Save on Enter key
-        nicknameInput.addEventListener("keyup", (e) => {
-            if (e.key === "Enter") {
-                saveNicknameBtn.click();
-            }
-        });
-
-        // Close dropdown when clicking outside
-        document.addEventListener("click", (e) => {
-            const nicknameDropdown = select("#nicknameDropdown");
-            if (nicknameDropdown && !nicknameDropdown.contains(e.target)) {
+            // Edit nickname
+            editNicknameBtn.addEventListener("click", () => {
                 nicknameMenu.classList.remove("show");
+                nicknameInputContainer.classList.add("show");
+                nicknameInput.value = nicknameText.textContent === "匿名用户" ? "" : nicknameText.textContent;
+                nicknameInput.focus();
+            });
+
+            // Cancel nickname menu
+            cancelNicknameBtn.addEventListener("click", () => {
+                nicknameMenu.classList.remove("show");
+            });
+
+            // Cancel nickname edit
+            cancelNicknameEditBtn.addEventListener("click", () => {
                 nicknameInputContainer.classList.remove("show");
-            }
-        });
+            });
+
+            // Save nickname
+            saveNicknameBtn.addEventListener("click", async () => {
+                const newNickname = nicknameInput.value.trim() || "匿名用户";
+                await getGM().setValue("ChatNickname", newNickname);
+                nicknameText.textContent = newNickname;
+                nicknameInputContainer.classList.remove("show");
+            });
+
+            // Save on Enter key
+            nicknameInput.addEventListener("keyup", (e) => {
+                if (e.key === "Enter") {
+                    saveNicknameBtn.click();
+                }
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener("click", (e) => {
+                const nicknameDropdown = select("#nicknameDropdown");
+                if (nicknameDropdown && !nicknameDropdown.contains(e.target)) {
+                    nicknameMenu.classList.remove("show");
+                    nicknameInputContainer.classList.remove("show");
+                }
+            });
+        }
 
         enableSpeechSynthesis() {
             if (!extension.speechSynthesisEnabled) {

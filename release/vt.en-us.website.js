@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Video Together 一起看视频
 // @namespace    https://2gether.video/
-// @version      1776990627
+// @version      1776996450
 // @description  Watch video together 一起看视频
 // @author       maggch@outlook.com
 // @match        *://*/*
@@ -1962,45 +1962,34 @@ async function clearRoomChatHistory(roomId) {
       <div class="vt-modal-title">VideoTogether</div>
     </div>
 
-    <button id="downloadBtn" type="button" class="vt-modal-title-button vt-modal-easyshare">
+    <div class="nickname-dropdown" id="nicknameDropdown">
+      <button class="nickname-btn" id="nicknameBtn">
+        <span>👤</span>
+        <span id="nicknameText">匿名用户</span>
+        <span>▼</span>
+      </button>
+      <div class="nickname-menu" id="nicknameMenu">
+        <div class="nickname-menu-item" id="editNicknameBtn">编辑昵称</div>
+        <div class="nickname-menu-item" id="cancelNicknameBtn">取消</div>
+      </div>
+      <div class="nickname-input-container" id="nicknameInputContainer">
+        <input type="text" id="nicknameInput" placeholder="输入昵称" maxlength="20" />
+        <button class="nickname-save-btn" id="saveNicknameBtn">保存</button>
+        <button class="nickname-cancel-btn" id="cancelNicknameEditBtn">取消</button>
+      </div>
+    </div>
+
+    <button id="videoTogetherMinimize" type="button" aria-label="Minimize" class="vt-modal-close vt-modal-title-button">
       <span class="vt-modal-close-x">
-        <span role="img" aria-label="Setting" class="vt-anticon vt-anticon-close vt-modal-close-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
-            stroke="currentColor" stroke-width="1.67">
-            <path
-              d="M12.5535 16.5061C12.4114 16.6615 12.2106 16.75 12 16.75C11.7894 16.75 11.5886 16.6615 11.4465 16.5061L7.44648 12.1311C7.16698 11.8254 7.18822 11.351 7.49392 11.0715C7.79963 10.792 8.27402 10.8132 8.55352 11.1189L11.25 14.0682V3C11.25 2.58579 11.5858 2.25 12 2.25C12.4142 2.25 12.75 2.58579 12.75 3V14.0682L15.4465 11.1189C15.726 10.8132 16.2004 10.792 16.5061 11.0715C16.8118 11.351 16.833 11.8254 16.5535 12.1311L12.5535 16.5061Z"
-              fill="currentColor" />
-            <path
-              d="M3.75 15C3.75 14.5858 3.41422 14.25 3 14.25C2.58579 14.25 2.25 14.5858 2.25 15V15.0549C2.24998 16.4225 2.24996 17.5248 2.36652 18.3918C2.48754 19.2919 2.74643 20.0497 3.34835 20.6516C3.95027 21.2536 4.70814 21.5125 5.60825 21.6335C6.47522 21.75 7.57754 21.75 8.94513 21.75H15.0549C16.4225 21.75 17.5248 21.75 18.3918 21.6335C19.2919 21.5125 20.0497 21.2536 20.6517 20.6516C21.2536 20.0497 21.5125 19.2919 21.6335 18.3918C21.75 17.5248 21.75 16.4225 21.75 15.0549V15C21.75 14.5858 21.4142 14.25 21 14.25C20.5858 14.25 20.25 14.5858 20.25 15C20.25 16.4354 20.2484 17.4365 20.1469 18.1919C20.0482 18.9257 19.8678 19.3142 19.591 19.591C19.3142 19.8678 18.9257 20.0482 18.1919 20.1469C17.4365 20.2484 16.4354 20.25 15 20.25H9C7.56459 20.25 6.56347 20.2484 5.80812 20.1469C5.07435 20.0482 4.68577 19.8678 4.40901 19.591C4.13225 19.3142 3.9518 18.9257 3.85315 18.1919C3.75159 17.4365 3.75 16.4354 3.75 15Z"
-              fill="currentColor" />
+        <span role="img" aria-label="minimize" class="vt-anticon vt-anticon-close vt-modal-close-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true"
+            role="img" class="iconify iconify--ic" width="20" height="20" preserveAspectRatio="xMidYMid meet"
+            viewBox="0 0 24 24">
+            <path fill="currentColor" d="M18 12.998H6a1 1 0 0 1 0-2h12a1 1 0 0 1 0 2z"></path>
           </svg>
         </span>
       </span>
     </button>
-
-    <button style="display: none;" id="easyShareCopyBtn" type="button" class="vt-modal-title-button vt-modal-easyshare">
-      <span class="vt-modal-close-x">
-        <span role="img" aria-label="Setting" class="vt-anticon vt-anticon-close vt-modal-close-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32">
-            <path fill="currentColor"
-              d="M0 25.472q0 2.368 1.664 4.032t4.032 1.664h18.944q2.336 0 4-1.664t1.664-4.032v-8.192l-3.776 3.168v5.024q0 0.8-0.544 1.344t-1.344 0.576h-18.944q-0.8 0-1.344-0.576t-0.544-1.344v-18.944q0-0.768 0.544-1.344t1.344-0.544h9.472v-3.776h-9.472q-2.368 0-4.032 1.664t-1.664 4v18.944zM5.696 19.808q0 2.752 1.088 5.28 0.512-2.944 2.24-5.344t4.288-3.872 5.632-1.664v5.6l11.36-9.472-11.36-9.472v5.664q-2.688 0-5.152 1.056t-4.224 2.848-2.848 4.224-1.024 5.152zM32 22.080v0 0 0z">
-            </path>
-          </svg>
-        </span>
-      </span>
-    </button>
-
-    <a href="https://afdian.com/a/videotogether" target="_blank" id="vtDonate" type="button"
-      class="vt-modal-donate vt-modal-title-button">
-      <span class="vt-modal-close-x">
-        <span role="img" class="vt-anticon vt-anticon-close vt-modal-close-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
-            <path fill="red"
-              d="M12 4.435c-1.989-5.399-12-4.597-12 3.568 0 4.068 3.06 9.481 12 14.997 8.94-5.516 12-10.929 12-14.997 0-8.118-10-8.999-12-3.568z" />
-          </svg>
-        </span>
-      </span>
-    </a>
 
     <a href="https://setting.2gether.video/" target="_blank" id="videoTogetherSetting" type="button"
       aria-label="Setting" class="vt-modal-setting vt-modal-title-button">
@@ -2013,41 +2002,44 @@ async function clearRoomChatHistory(roomId) {
         </span>
       </span>
     </a>
-    <button id="videoTogetherMinimize" type="button" aria-label="Close" class="vt-modal-close vt-modal-title-button">
+
+    <a href="https://afdian.com/a/videotogether" target="_blank" id="vtDonate" type="button"
+      class="vt-modal-donate vt-modal-title-button">
       <span class="vt-modal-close-x">
-        <span role="img" aria-label="close" class="vt-anticon vt-anticon-close vt-modal-close-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true"
-            role="img" class="iconify iconify--ic" width="20" height="20" preserveAspectRatio="xMidYMid meet"
-            viewBox="0 0 24 24">
-            <path fill="currentColor" d="M18 12.998H6a1 1 0 0 1 0-2h12a1 1 0 0 1 0 2z"></path>
+        <span role="img" class="vt-anticon vt-anticon-close vt-modal-close-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+            <path fill="red"
+              d="M12 4.435c-1.989-5.399-12-4.597-12 3.568 0 4.068 3.06 9.481 12 14.997 8.94-5.516 12-10.929 12-14.997 0-8.118-10-8.999-12-3.568z" />
           </svg>
         </span>
       </span>
-    </button>
+    </a>
   </div>
 
   <div class="vt-modal-content">
 
     <div class="vt-modal-body">
-      <div id="mainPannel" class="content">
-        <div style="height: 22.5px;">
+      <div id="mainPannel" class="content" style="display: flex; flex-direction: column; width: 100%; height: 100%; gap: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
           <span id="videoTogetherRoleText"></span>
           <span id="memberCount"></span>
         </div>
-        <div id="videoTogetherStatusText" style="height: 22.5px;"></div>
-        <div style="margin-bottom: 10px;">
-          <span class="ellipsis" id="videoTogetherRoomNameLabel">Room</span>
-          <input id="videoTogetherRoomNameInput" autocomplete="off" placeholder="Name of room">
+        <div id="videoTogetherStatusText" style="color: #666; font-size: 12px;"></div>
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <span class="ellipsis" id="videoTogetherRoomNameLabel" style="width: 60px;">Room</span>
+            <input id="videoTogetherRoomNameInput" autocomplete="off" placeholder="Name of room" style="flex: 1;">
+          </div>
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <span class="ellipsis" id="videoTogetherRoomPasswordLabel" style="width: 60px;">Password</span>
+            <input id="videoTogetherRoomPdIpt" autocomplete="off" placeholder="Host's password" style="flex: 1;">
+          </div>
         </div>
-        <div>
-          <span class="ellipsis" id="videoTogetherRoomPasswordLabel">Password</span>
-          <input id="videoTogetherRoomPdIpt" autocomplete="off" placeholder="Host's password">
-        </div>
-        <div>
-          <div id="textMessageChat" style="display: none;">
-            <div id="chatHistory" style="max-height: 120px; overflow-y: auto; margin-bottom: 8px; text-align: left;"></div>
-            <div style="display: flex; gap: 6px;">
-              <input id="textMessageInput" autocomplete="off" placeholder="Text Message">
+        <div style="flex: 1; min-height: 0;">
+          <div id="textMessageChat" style="display: none; height: 100%;">
+            <div id="chatHistory" style="flex: 1; min-height: 150px; max-height: 200px; overflow-y: auto; margin-bottom: 8px; text-align: left; width: 100%;"></div>
+            <div style="display: flex; gap: 6px; width: 100%;">
+              <input id="textMessageInput" autocomplete="off" placeholder="Text Message" style="flex: 1;">
               <button id="textMessageSend" class="vt-btn vt-btn-primary" type="button">
                 <span>Send</span>
               </button>
@@ -2083,7 +2075,7 @@ async function clearRoomChatHistory(roomId) {
             href="https://local.2gether.video/about.en-us.html">Copyright Notice</a>
         </div>
       </div>
-      <div id="voicePannel" class="content" style="display: none;">
+      <div id="voicePannel" class="content" style="display: none; flex-direction: column; gap: 12px; width: 100%;">
         <div id="videoVolumeCtrl" style="margin-top: 5px;width: 100%;text-align: left;">
           <span style="margin-top: 5px;display: inline-block;width: 100px;margin-left: 20px;">Video volume</span>
           <div class="range-slider">
@@ -2119,7 +2111,7 @@ async function clearRoomChatHistory(roomId) {
 
     <div class="vt-modal-footer">
 
-      <div id="lobbyBtnGroup">
+      <div id="lobbyBtnGroup" style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;">
         <button id="videoTogetherCreateButton" class="vt-btn vt-btn-primary" type="button">
           <span>Create</span>
         </button>
@@ -2129,89 +2121,85 @@ async function clearRoomChatHistory(roomId) {
       </div>
 
 
-      <div id="roomButtonGroup" style="display: none;">
-
-        <button id="videoTogetherExitButton" class="vt-btn vt-btn-dangerous" type="button">
-          <span>Exit</span>
-        </button>
-
-        <button id="callBtn" class="vt-btn vt-btn-dangerous" type="button">
-          <span>Call</span>
-        </button>
-
-
-        <div id="callConnecting" class="lds-ellipsis" style="display: none;">
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
+      <div id="roomButtonGroup" style="display: none; flex-direction: column; gap: 8px;">
+        <div style="display: flex; gap: 8px; justify-content: center;">
+          <button id="videoTogetherExitButton" class="vt-btn vt-btn-dangerous" type="button">
+            <span>Exit</span>
+          </button>
+          <button id="callBtn" class="vt-btn vt-btn-dangerous" type="button">
+            <span>Call</span>
+          </button>
         </div>
-
-        <button id="callErrorBtn" class="vt-modal-title-button error-button" style="display: none;">
-          <svg width="24px" height="24px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path fill="currentColor" d="M11.001 10h2v5h-2zM11 16h2v2h-2z" />
-            <path fill="currentColor"
-              d="M13.768 4.2C13.42 3.545 12.742 3.138 12 3.138s-1.42.407-1.768 1.063L2.894 18.064a1.986 1.986 0 0 0 .054 1.968A1.984 1.984 0 0 0 4.661 21h14.678c.708 0 1.349-.362 1.714-.968a1.989 1.989 0 0 0 .054-1.968L13.768 4.2zM4.661 19 12 5.137 19.344 19H4.661z" />
-          </svg>
-        </button>
-
-        <button id="audioBtn" style="display: none;" type="button" aria-label="Close"
-          class="vt-modal-audio vt-modal-title-button">
-          <span class="vt-modal-close-x">
-            <span class="vt-anticon vt-anticon-close vt-modal-close-icon">
-              <svg width="24px" height="24px" viewBox="0 0 489.6 489.6" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path stroke="currentColor" stroke-width="16" fill="currentColor" d="M361.1,337.6c2.2,1.5,4.6,2.3,7.1,2.3c3.8,0,7.6-1.8,10-5.2c18.7-26.3,28.5-57.4,28.5-89.9s-9.9-63.6-28.5-89.9
-                c-3.9-5.5-11.6-6.8-17.1-2.9c-5.5,3.9-6.8,11.6-2.9,17.1c15.7,22.1,24,48.3,24,75.8c0,27.4-8.3,53.6-24,75.8
-                C354.3,326.1,355.6,333.7,361.1,337.6z" />
-                <path stroke="currentColor" stroke-width="16" fill="currentColor" d="M425.4,396.3c2.2,1.5,4.6,2.3,7.1,2.3c3.8,0,7.6-1.8,10-5.2c30.8-43.4,47.1-94.8,47.1-148.6s-16.3-105.1-47.1-148.6
-                c-3.9-5.5-11.6-6.8-17.1-2.9c-5.5,3.9-6.8,11.6-2.9,17.1c27.9,39.3,42.6,85.7,42.6,134.4c0,48.6-14.7,95.1-42.6,134.4
-                C418.6,384.7,419.9,392.3,425.4,396.3z" />
-                <path stroke="currentColor" stroke-width="16" fill="currentColor"
-                  d="M254.7,415.7c4.3,2.5,9.2,3.8,14.2,3.8l0,0c7.4,0,14.4-2.8,19.7-7.9c5.6-5.4,8.7-12.6,8.7-20.4V98.5
-                c0-15.7-12.7-28.4-28.4-28.4c-4.9,0-9.8,1.3-14.2,3.8c-0.3,0.2-0.6,0.3-0.8,0.5l-100.1,69.2H73.3C32.9,143.6,0,176.5,0,216.9v55.6
-                c0,40.4,32.9,73.3,73.3,73.3h84.5l95.9,69.2C254,415.3,254.4,415.5,254.7,415.7z M161.8,321.3H73.3c-26.9,0-48.8-21.9-48.8-48.8
-                v-55.6c0-26.9,21.9-48.8,48.8-48.8h84.3c2.5,0,4.9-0.8,7-2.2l102.7-71c0.5-0.3,1.1-0.4,1.6-0.4c1.6,0,3.9,1.2,3.9,3.9v292.7
-                c0,1.1-0.4,2-1.1,2.8c-0.7,0.7-1.8,1.1-2.7,1.1c-0.5,0-1-0.1-1.5-0.3l-98.4-71.1C166.9,322.1,164.4,321.3,161.8,321.3z" />
-              </svg>
+        <div style="display: flex; gap: 8px; justify-content: center; align-items: center;">
+          <div id="callConnecting" class="lds-ellipsis" style="display: none;">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>
+          <button id="callErrorBtn" class="vt-modal-title-button error-button" style="display: none;">
+            <svg width="24px" height="24px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path fill="currentColor" d="M11.001 10h2v5h-2zM11 16h2v2h-2z" />
+              <path fill="currentColor"
+                d="M13.768 4.2C13.42 3.545 12.742 3.138 12 3.138s-1.42.407-1.768 1.063L2.894 18.064a1.986 1.986 0 0 0 .054 1.968A1.984 1.984 0 0 0 4.661 21h14.678c.708 0 1.349-.362 1.714-.968a1.989 1.989 0 0 0 .054-1.968L13.768 4.2zM4.661 19 12 5.137 19.344 19H4.661z" />
+            </svg>
+          </button>
+          <button id="audioBtn" style="display: none;" type="button" aria-label="Close"
+            class="vt-modal-audio vt-modal-title-button">
+            <span class="vt-modal-close-x">
+              <span class="vt-anticon vt-anticon-close vt-modal-close-icon">
+                <svg width="24px" height="24px" viewBox="0 0 489.6 489.6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke="currentColor" stroke-width="16" fill="currentColor" d="M361.1,337.6c2.2,1.5,4.6,2.3,7.1,2.3c3.8,0,7.6-1.8,10-5.2c18.7-26.3,28.5-57.4,28.5-89.9s-9.9-63.6-28.5-89.9
+                  c-3.9-5.5-11.6-6.8-17.1-2.9c-5.5,3.9-6.8,11.6-2.9,17.1c15.7,22.1,24,48.3,24,75.8c0,27.4-8.3,53.6-24,75.8
+                  C354.3,326.1,355.6,333.7,361.1,337.6z" />
+                  <path stroke="currentColor" stroke-width="16" fill="currentColor" d="M425.4,396.3c2.2,1.5,4.6,2.3,7.1,2.3c3.8,0,7.6-1.8,10-5.2c30.8-43.4,47.1-94.8,47.1-148.6s-16.3-105.1-47.1-148.6
+                  c-3.9-5.5-11.6-6.8-17.1-2.9c-5.5,3.9-6.8,11.6-2.9,17.1c27.9,39.3,42.6,85.7,42.6,134.4c0,48.6-14.7,95.1-42.6,134.4
+                  C418.6,384.7,419.9,392.3,425.4,396.3z" />
+                  <path stroke="currentColor" stroke-width="16" fill="currentColor"
+                    d="M254.7,415.7c4.3,2.5,9.2,3.8,14.2,3.8l0,0c7.4,0,14.4-2.8,19.7-7.9c5.6-5.4,8.7-12.6,8.7-20.4V98.5
+                  c0-15.7-12.7-28.4-28.4-28.4c-4.9,0-9.8,1.3-14.2,3.8c-0.3,0.2-0.6,0.3-0.8,0.5l-100.1,69.2H73.3C32.9,143.6,0,176.5,0,216.9v55.6
+                  c0,40.4,32.9,73.3,73.3,73.3h84.5l95.9,69.2C254,415.3,254.4,415.5,254.7,415.7z M161.8,321.3H73.3c-26.9,0-48.8-21.9-48.8-48.8
+                  v-55.6c0-26.9,21.9-48.8,48.8-48.8h84.3c2.5,0,4.9-0.8,7-2.2l102.7-71c0.5-0.3,1.1-0.4,1.6-0.4c1.6,0,3.9,1.2,3.9,3.9v292.7
+                  c0,1.1-0.4,2-1.1,2.8c-0.7,0.7-1.8,1.1-2.7,1.1c-0.5,0-1-0.1-1.5-0.3l-98.4-71.1C166.9,322.1,164.4,321.3,161.8,321.3z" />
+                </svg>
+              </span>
             </span>
-          </span>
+          </button>
+          <button id="micBtn" style="display: none;" type="button" aria-label="Close"
+            class="vt-modal-mic vt-modal-title-button">
+            <span class="vt-modal-close-x">
+              <span class="vt-anticon vt-anticon-close vt-modal-close-icon">
+                <svg width="24px" height="24px" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="48" height="48" fill="white" fill-opacity="0" />
+                  <path
+                    d="M31 24V11C31 7.13401 27.866 4 24 4C20.134 4 17 7.13401 17 11V24C17 27.866 20.134 31 24 31C27.866 31 31 27.866 31 24Z"
+                    stroke="currentColor" stroke-width="4" stroke-linejoin="round" />
+                  <path d="M9 23C9 31.2843 15.7157 38 24 38C32.2843 38 39 31.2843 39 23" stroke="currentColor"
+                    stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+                  <path d="M24 38V44" stroke="currentColor" stroke-width="4" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                  <path id="disabledMic" d="M42 42L6 6" stroke="currentColor" stroke-width="4" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                </svg>
+                <svg id="enabledMic" style="display: none;" width="24px" height="24px" viewBox="0 0 48 48" fill="none"
+                  xmlns="http://www.w3.org/2000/svg">
+                  <rect width="48" height="48" fill="white" fill-opacity="0" />
+                  <path
+                    d="M31 24V11C31 7.13401 27.866 4 24 4C20.134 4 17 7.13401 17 11V24C17 27.866 20.134 31 24 31C27.866 31 31 27.866 31 24Z"
+                    stroke="currentColor" stroke-width="4" stroke-linejoin="round" />
+                  <path d="M9 23C9 31.2843 15.7157 38 24 38C32.2843 38 39 31.2843 39 23" stroke="currentColor"
+                    stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+                  <path d="M24 38V44" stroke="currentColor" stroke-width="4" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                </svg>
+              </span>
+            </span>
+          </button>
+        </div>
+        <button id="videoTogetherHelpButton" class="vt-btn" type="button" style="align-self: center;">
+          <span>Help</span>
         </button>
       </div>
-
-      <button id="micBtn" style="display: none;" type="button" aria-label="Close"
-        class="vt-modal-mic vt-modal-title-button">
-        <span class="vt-modal-close-x">
-          <span class="vt-anticon vt-anticon-close vt-modal-close-icon">
-            <svg width="24px" height="24px" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="48" height="48" fill="white" fill-opacity="0" />
-              <path
-                d="M31 24V11C31 7.13401 27.866 4 24 4C20.134 4 17 7.13401 17 11V24C17 27.866 20.134 31 24 31C27.866 31 31 27.866 31 24Z"
-                stroke="currentColor" stroke-width="4" stroke-linejoin="round" />
-              <path d="M9 23C9 31.2843 15.7157 38 24 38C32.2843 38 39 31.2843 39 23" stroke="currentColor"
-                stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
-              <path d="M24 38V44" stroke="currentColor" stroke-width="4" stroke-linecap="round"
-                stroke-linejoin="round" />
-              <path id="disabledMic" d="M42 42L6 6" stroke="currentColor" stroke-width="4" stroke-linecap="round"
-                stroke-linejoin="round" />
-            </svg>
-            <svg id="enabledMic" style="display: none;" width="24px" height="24px" viewBox="0 0 48 48" fill="none"
-              xmlns="http://www.w3.org/2000/svg">
-              <rect width="48" height="48" fill="white" fill-opacity="0" />
-              <path
-                d="M31 24V11C31 7.13401 27.866 4 24 4C20.134 4 17 7.13401 17 11V24C17 27.866 20.134 31 24 31C27.866 31 31 27.866 31 24Z"
-                stroke="currentColor" stroke-width="4" stroke-linejoin="round" />
-              <path d="M9 23C9 31.2843 15.7157 38 24 38C32.2843 38 39 31.2843 39 23" stroke="currentColor"
-                stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
-              <path d="M24 38V44" stroke="currentColor" stroke-width="4" stroke-linecap="round"
-                stroke-linejoin="round" />
-            </svg>
-          </span>
-        </span>
-      </button>
-
-      <button id="videoTogetherHelpButton" class="vt-btn" type="button">
-        <span>Help</span>
-      </button>
     </div>
   </div>
 </div>
@@ -2235,12 +2223,12 @@ async function clearRoomChatHistory(roomId) {
     position: fixed;
     bottom: 15px;
     right: 15px;
-    width: 260px;
-    height: 210px;
+    width: 280px;
+    height: 420px;
     text-align: center;
-    border: solid 1px #e9e9e9 !important;
-    box-shadow: 0 3px 6px -4px #0000001f, 0 6px 16px #00000014, 0 9px 28px 8px #0000000d;
-    border-radius: 10px;
+    border: none !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    border-radius: 16px;
     line-height: 1.2;
   }
 
@@ -2341,12 +2329,14 @@ async function clearRoomChatHistory(roomId) {
 
   .vt-modal-header {
     display: flex;
-    padding: 12px;
+    padding: 8px 12px;
     color: #000000d9;
     background: #fff;
     border-bottom: 1px solid #f0f0f0;
-    border-radius: 10px 10px 0 0;
+    border-radius: 16px 16px 0 0;
     align-items: center;
+    height: 36px;
+    box-sizing: border-box;
   }
 
   .vt-modal-title {
@@ -2360,30 +2350,32 @@ async function clearRoomChatHistory(roomId) {
   }
 
   .vt-modal-body {
-    height: 164px;
+    height: calc(100% - 36px - 140px);
+    min-height: 180px;
     display: flex;
     flex-direction: column;
     align-items: center;
     overflow-y: auto;
-    font-size: 16px;
+    font-size: 14px;
     color: black;
-    border-radius: 0 0 10px 10px;
     background-size: cover;
+    padding: 12px;
+    box-sizing: border-box;
   }
 
   .vt-modal-footer {
-    padding: 10px 16px;
-    text-align: right;
+    padding: 10px 12px;
+    text-align: center;
     background: transparent;
     border-top: 1px solid #f0f0f0;
-    border-radius: 0 0 2px 2px;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: 8px;
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
+    box-sizing: border-box;
   }
 
   .vt-btn {
@@ -2395,7 +2387,6 @@ async function clearRoomChatHistory(roomId) {
     text-align: center;
     background-image: none;
     border: 1px solid transparent;
-    box-shadow: 0 2px #00000004;
     cursor: pointer;
     transition: all .3s cubic-bezier(.645, .045, .355, 1);
     -webkit-user-select: none;
@@ -2405,13 +2396,11 @@ async function clearRoomChatHistory(roomId) {
     height: 32px;
     padding: 4px 15px;
     font-size: 14px;
-    border-radius: 2px;
+    border-radius: 8px;
     color: #000000d9;
     border-color: #d9d9d9;
     background: #fff;
     outline: 0;
-    text-shadow: 0 -1px 0 rgb(0 0 0 / 12%);
-    box-shadow: 0 2px #0000000b;
   }
 
   .vt-btn:hover {
@@ -2764,27 +2753,115 @@ async function clearRoomChatHistory(roomId) {
   }
 
   .chat-message {
-    padding: 4px 8px;
-    border-radius: 8px;
-    margin-bottom: 4px;
-    font-size: 12px;
-    max-width: 90%;
+    padding: 8px 12px;
+    border-radius: 12px;
+    margin-bottom: 6px;
+    font-size: 13px;
+    max-width: 85%;
     word-wrap: break-word;
+    line-height: 1.4;
   }
   .chat-message.self {
     background-color: #e8f5e9;
-    margin-left: 10%;
+    margin-left: 15%;
     text-align: right;
+    border-bottom-right-radius: 4px;
   }
   .chat-message.other {
-    background-color: #e3f2fd;
+    background-color: #f0f2f5;
     text-align: left;
+    border-bottom-left-radius: 4px;
   }
   .chat-message .sender {
-    font-size: 10px;
-    font-weight: bold;
+    font-size: 11px;
+    font-weight: 600;
     margin-bottom: 2px;
     color: #666;
+  }
+  .chat-message .content {
+    color: #1f1f1f;
+  }
+  .nickname-dropdown {
+    position: relative;
+    display: inline-block;
+    margin-left: auto;
+    margin-right: 8px;
+  }
+  .nickname-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: #f5f5f5;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #000000d9;
+    border: none;
+    transition: background 0.2s;
+  }
+  .nickname-btn:hover {
+    background: #e8e8e8;
+  }
+  .nickname-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    min-width: 120px;
+    z-index: 1000;
+    padding: 4px 0;
+    margin-top: 4px;
+  }
+  .nickname-menu.show {
+    display: block;
+  }
+  .nickname-menu-item {
+    padding: 8px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    color: #000000d9;
+  }
+  .nickname-menu-item:hover {
+    background: #f5f5f5;
+  }
+  .nickname-input-container {
+    display: none;
+    padding: 8px 12px;
+    gap: 6px;
+  }
+  .nickname-input-container.show {
+    display: flex;
+  }
+  .nickname-input-container input {
+    flex: 1;
+    padding: 6px 8px;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    font-size: 13px;
+    outline: none;
+  }
+  .nickname-input-container input:focus {
+    border-color: #1890ff;
+    box-shadow: 0 0 0 2px rgba(24,144,255,0.2);
+  }
+  .nickname-input-container button {
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+  }
+  .nickname-save-btn {
+    background: #1890ff;
+    color: #fff;
+  }
+  .nickname-cancel-btn {
+    background: #f5f5f5;
+    color: #000000d9;
   }
 </style>`);
                 (document.body || document.documentElement).appendChild(shadowWrapper);
@@ -2836,6 +2913,7 @@ async function clearRoomChatHistory(roomId) {
                 this.textMessageConnectingStatus = wrapper.querySelector("#textMessageConnectingStatus");
                 this.zhcnTtsMissing = wrapper.querySelector("#zhcnTtsMissing");
                 this.downloadBtn = wrapper.querySelector("#downloadBtn");
+                this.initNicknameDropdown();
                 hide(this.downloadBtn);
                 this.confirmDownloadBtn = wrapper.querySelector("#confirmDownloadBtn")
                 this.confirmDownloadBtn.onclick = () => {
@@ -3068,6 +3146,75 @@ async function clearRoomChatHistory(roomId) {
                     renderChatMessage(chatHistoryEl, msg.sender, msg.content, msg.isSelf);
                 });
             }).catch(() => {});
+        }
+
+        initNicknameDropdown() {
+            const nicknameBtn = select("#nicknameBtn");
+            const nicknameMenu = select("#nicknameMenu");
+            const nicknameText = select("#nicknameText");
+            const nicknameInputContainer = select("#nicknameInputContainer");
+            const nicknameInput = select("#nicknameInput");
+            const editNicknameBtn = select("#editNicknameBtn");
+            const saveNicknameBtn = select("#saveNicknameBtn");
+            const cancelNicknameBtn = select("#cancelNicknameBtn");
+            const cancelNicknameEditBtn = select("#cancelNicknameEditBtn");
+
+            if (!nicknameBtn || !nicknameMenu) return;
+
+            // Load saved nickname
+            getGM().getValue("ChatNickname").then(nickname => {
+                if (nickname) {
+                    nicknameText.textContent = nickname;
+                }
+            });
+
+            // Toggle nickname menu
+            nicknameBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                nicknameMenu.classList.toggle("show");
+            });
+
+            // Edit nickname
+            editNicknameBtn.addEventListener("click", () => {
+                nicknameMenu.classList.remove("show");
+                nicknameInputContainer.classList.add("show");
+                nicknameInput.value = nicknameText.textContent === "匿名用户" ? "" : nicknameText.textContent;
+                nicknameInput.focus();
+            });
+
+            // Cancel nickname menu
+            cancelNicknameBtn.addEventListener("click", () => {
+                nicknameMenu.classList.remove("show");
+            });
+
+            // Cancel nickname edit
+            cancelNicknameEditBtn.addEventListener("click", () => {
+                nicknameInputContainer.classList.remove("show");
+            });
+
+            // Save nickname
+            saveNicknameBtn.addEventListener("click", async () => {
+                const newNickname = nicknameInput.value.trim() || "匿名用户";
+                await getGM().setValue("ChatNickname", newNickname);
+                nicknameText.textContent = newNickname;
+                nicknameInputContainer.classList.remove("show");
+            });
+
+            // Save on Enter key
+            nicknameInput.addEventListener("keyup", (e) => {
+                if (e.key === "Enter") {
+                    saveNicknameBtn.click();
+                }
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener("click", (e) => {
+                const nicknameDropdown = select("#nicknameDropdown");
+                if (nicknameDropdown && !nicknameDropdown.contains(e.target)) {
+                    nicknameMenu.classList.remove("show");
+                    nicknameInputContainer.classList.remove("show");
+                }
+            });
         }
 
         enableSpeechSynthesis() {
@@ -3359,7 +3506,7 @@ async function clearRoomChatHistory(roomId) {
 
             this.activatedVideo = undefined;
             this.tempUser = generateTempUserId();
-            this.version = '1776990627';
+            this.version = '1776996450';
             this.isMain = (window.self == window.top);
             this.UserId = undefined;
 
