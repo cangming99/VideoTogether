@@ -1477,7 +1477,7 @@ async function clearRoomChatHistory(roomId) {
                     }
                     // 加载聊天历史
                     if (chatHistoryEl) {
-                        const roomId = extension.ctxRoomId || "default";
+                        const roomId = extension.roomName || "default";
                         getRoomChatHistory(roomId).then(messages => {
                             if (chatHistoryEl.children.length === 0) {
                                 messages.forEach(msg => {
@@ -1514,7 +1514,7 @@ async function clearRoomChatHistory(roomId) {
                     GotTxtMsgCallback = async (id, msg) => {
                         console.log(id, msg);
                         const parsed = parseMessage(msg);
-                        const roomId = extension.ctxRoomId || "default";
+                        const roomId = extension.roomName || "default";
                         const isSelf = id == extension.currentSendingMsgId;
 
                         // 存储到历史记录
@@ -1601,11 +1601,32 @@ async function clearRoomChatHistory(roomId) {
                     WS.sendTextMessage(extension.currentSendingMsgId, wrappedMsg);
                 }
 
+                // TTS 按钮
+                const ttsBtn = wrapper.querySelector("#ttsBtn");
+                if (ttsBtn) {
+                    let ttsEnabled = window.VideoTogetherStorage?.PublicEnableTTS !== false;
+                    const updateTtsBtnStyle = () => {
+                        ttsBtn.style.backgroundColor = ttsEnabled ? "#1890ff" : "#999";
+                        ttsBtn.style.color = "#fff";
+                        ttsBtn.style.borderColor = ttsEnabled ? "#1890ff" : "#999";
+                    };
+                    updateTtsBtnStyle();
+                    ttsBtn.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        ttsEnabled = !ttsEnabled;
+                        if (window.VideoTogetherStorage) {
+                            window.VideoTogetherStorage.PublicEnableTTS = ttsEnabled;
+                            sendMessageToTop(MessageType.SetStorageValue, { key: "PublicEnableTTS", value: ttsEnabled });
+                        }
+                        updateTtsBtnStyle();
+                    });
+                }
+
                 // 非全屏模式的 GotTxtMsgCallback
                 GotTxtMsgCallback = async (id, msg) => {
                     console.log(id, msg);
                     const parsed = parseMessage(msg);
-                    const roomId = extension.ctxRoomId || "default";
+                    const roomId = extension.roomName || "default";
                     const isSelf = id == extension.currentSendingMsgId;
 
                     // 存储到历史记录
@@ -1643,13 +1664,13 @@ async function clearRoomChatHistory(roomId) {
                 this.exitButton = wrapper.querySelector("#videoTogetherExitButton");
                 this.callBtn = wrapper.querySelector("#callBtn");
                 this.callBtn.onclick = () => Voice.join("", window.videoTogetherExtension.roomName);
-                this.helpButton = wrapper.querySelector("#videoTogetherHelpButton");
                 this.audioBtn = wrapper.querySelector("#audioBtn");
                 this.micBtn = wrapper.querySelector("#micBtn");
                 this.videoVolume = wrapper.querySelector("#videoVolume");
                 this.callVolumeSlider = wrapper.querySelector("#callVolume");
                 this.callErrorBtn = wrapper.querySelector("#callErrorBtn");
-                this.clearChatHistoryBtn = wrapper.querySelector("#clearChatHistoryBtn");
+                this.chatHistoryBtn = wrapper.querySelector("#chatHistoryBtn");
+                this.chatHistoryBtnRoom = wrapper.querySelector("#chatHistoryBtnRoom");
                 this.easyShareCopyBtn = wrapper.querySelector("#easyShareCopyBtn");
                 this.textMessageChat = wrapper.querySelector("#textMessageChat");
                 this.chatInputRow = wrapper.querySelector("#chatInputRow");
@@ -1731,20 +1752,136 @@ async function clearRoomChatHistory(roomId) {
                 this.callErrorBtn.onclick = () => {
                     Voice.join("", window.videoTogetherExtension.roomName);
                 }
-                this.clearChatHistoryBtn.onclick = async () => {
-                    const roomId = extension.ctxRoomId || "default";
+                this.chatHistoryBtn.onclick = async () => {
                     const history = await getChatHistory();
-                    if (history[roomId]) {
-                        history[roomId].messages = [];
-                        history[roomId].lastActivity = Date.now();
-                        await saveChatHistory(history);
+                    const roomIds = Object.keys(history).filter(k => history[k]?.messages?.length > 0);
+
+                    // 创建模态框
+                    const modal = document.createElement("div");
+                    modal.style.cssText = `
+                        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                        background: rgba(0,0,0,0.5); z-index: 2147483647;
+                        display: flex; align-items: center; justify-content: center;
+                    `;
+
+                    const modalContent = document.createElement("div");
+                    modalContent.style.cssText = `
+                        background: #fff; border-radius: 12px; padding: 20px;
+                        max-width: 500px; max-height: 80vh; overflow-y: auto;
+                        color: #1a1a1a; font-size: 14px; width: 90%;
+                        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+                    `;
+
+                    modalContent.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3 style="margin: 0; color: #1a1a1a;">{$chatHistoryModal$}</h3>
+                            <button id="modal-close-btn" style="
+                                background: transparent; border: none; color: #666;
+                                font-size: 24px; cursor: pointer; padding: 0 5px; line-height: 1;
+                            ">×</button>
+                        </div>
+                        <div id="room-list"></div>
+                    `;
+
+                    modal.appendChild(modalContent);
+                    document.body.appendChild(modal);
+
+                    const roomList = modalContent.querySelector("#room-list");
+                    const closeModal = () => modal.remove();
+                    modalContent.querySelector("#modal-close-btn").onclick = closeModal;
+                    modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+
+                    if (roomIds.length === 0) {
+                        roomList.innerHTML = `<div style="text-align: center; color: #999; padding: 30px;">{$chatHistoryEmpty$}</div>`;
+                        return;
                     }
-                    const chatHistoryEl = select("#chatHistory");
-                    if (chatHistoryEl) {
-                        chatHistoryEl.innerHTML = "";
-                    }
-                    popupError("{$chatHistoryCleared$}");
+
+                    roomIds.forEach(roomId => {
+                        const room = history[roomId];
+                        const msgCount = room.messages.length;
+                        const lastTime = room.lastActivity ? new Date(room.lastActivity).toLocaleString() : "-";
+
+                        const roomItem = document.createElement("div");
+                        roomItem.style.cssText = `
+                            background: #f5f5f5; border-radius: 8px; padding: 12px; margin-bottom: 10px;
+                            border: 1px solid #e0e0e0;
+                        `;
+                        roomItem.innerHTML = `
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <div>
+                                    <div style="font-weight: 600; color: #1890ff; word-break: break-all;">${escapeHtml(roomId)}</div>
+                                    <div style="font-size: 12px; color: #888;">${msgCount} 条消息 | ${lastTime}</div>
+                                </div>
+                            </div>
+                            <div id="preview-${roomId}" style="display: none; background: #fff; border-radius: 6px; padding: 10px; margin-bottom: 10px; max-height: 200px; overflow-y: auto; border: 1px solid #ddd;"></div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="preview-btn" data-room="${roomId}" style="
+                                    flex: 1; padding: 8px; border: none; border-radius: 6px;
+                                    background: #1890ff; color: #fff; cursor: pointer; font-weight: 500;
+                                ">{$chatHistoryPreview$}</button>
+                                <button class="export-btn" data-room="${roomId}" style="
+                                    flex: 1; padding: 8px; border: none; border-radius: 6px;
+                                    background: #52c41a; color: #fff; cursor: pointer;
+                                ">{$chatHistoryExport$}</button>
+                                <button class="delete-btn" data-room="${roomId}" style="
+                                    flex: 1; padding: 8px; border: none; border-radius: 6px;
+                                    background: #ff4d4f; color: #fff; cursor: pointer;
+                                ">{$chatHistoryDelete$}</button>
+                            </div>
+                        `;
+                        roomList.appendChild(roomItem);
+
+                        // 预览按钮
+                        roomItem.querySelector(".preview-btn").onclick = function() {
+                            const previewEl = roomItem.querySelector(`#preview-${roomId}`);
+                            const btn = roomItem.querySelector(".preview-btn");
+                            if (previewEl.style.display === "none") {
+                                previewEl.style.display = "block";
+                                previewEl.innerHTML = room.messages.map(m =>
+                                    `<div style="margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #eee;">
+                                        <span style="color: ${m.isSelf ? '#1890ff' : '#fa8c16'};font-weight:600;">${escapeHtml(m.sender)}</span>
+                                        <span style="color: #666; margin-left: 8px;">${escapeHtml(m.content)}</span>
+                                        <div style="font-size: 11px; color: #999; margin-top: 4px;">${m.timestamp ? new Date(m.timestamp).toLocaleString() : ''}</div>
+                                    </div>`
+                                ).join('');
+                                btn.textContent = "{$chatHistoryClose$}";
+                                btn.style.background = "#999";
+                            } else {
+                                previewEl.style.display = "none";
+                                btn.textContent = "{$chatHistoryPreview$}";
+                                btn.style.background = "#1890ff";
+                            }
+                        };
+
+                        // 导出按钮
+                        roomItem.querySelector(".export-btn").onclick = function() {
+                            const text = room.messages.map(m =>
+                                `[${m.timestamp ? new Date(m.timestamp).toLocaleString() : ''}] ${m.sender}: ${m.content}`
+                            ).join('\n');
+                            const blob = new Blob([text], { type: 'text/plain' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `chat_history_${roomId}_${Date.now()}.txt`;
+                            a.click();
+                            URL.revokeObjectURL(url);
+                            popupError("{$chatHistoryExported$}");
+                        };
+
+                        // 删除按钮
+                        roomItem.querySelector(".delete-btn").onclick = function() {
+                            if (confirm("{$chatHistoryConfirmDelete$}")) {
+                                delete history[roomId];
+                                saveChatHistory(history);
+                                roomItem.remove();
+                                if (roomList.children.length === 0) {
+                                    roomList.innerHTML = `<div style="text-align: center; color: #999; padding: 30px;">{$chatHistoryEmpty$}</div>`;
+                                }
+                            }
+                        };
+                    });
                 }
+                this.chatHistoryBtnRoom.onclick = this.chatHistoryBtn.onclick;
                 this.videoVolume.oninput = () => {
                     extension.videoVolume = this.videoVolume.value;
                     sendMessageToTop(MessageType.ChangeVideoVolume, { volume: extension.getVideoVolume() / 100 });
@@ -1793,7 +1930,6 @@ async function clearRoomChatHistory(roomId) {
 
                 this.createRoomButton.onclick = this.CreateRoomButtonOnClick.bind(this);
                 this.joinRoomButton.onclick = this.JoinRoomButtonOnClick.bind(this);
-                this.helpButton.onclick = this.HelpButtonOnClick.bind(this);
                 this.exitButton.onclick = (() => {
                     window.videoTogetherExtension.exitRoom();
                 });
@@ -1901,7 +2037,7 @@ async function clearRoomChatHistory(roomId) {
         loadChatHistory() {
             const chatHistoryEl = select("#chatHistory");
             if (!chatHistoryEl) return;
-            const roomId = extension.ctxRoomId || "default";
+            const roomId = extension.roomName || "default";
             getRoomChatHistory(roomId).then(messages => {
                 // Only load if chat is empty (avoid clearing newly rendered messages)
                 if (chatHistoryEl.children.length === 0) {
@@ -2096,7 +2232,7 @@ async function clearRoomChatHistory(roomId) {
             this.roomInputContainer.style.display = "none";
             this.roomNameDisplay.style.display = "inline";
             this.roomNameDisplay.textContent = this.inputRoomName.value;
-            hide(this.lobbyBtnGroup)
+            hide(this.lobbyBtnGroup);
             show(this.roomButtonGroup);
             this.exitButton.style = "";
             hide(this.inputRoomPasswordLabel);
@@ -2387,6 +2523,11 @@ async function clearRoomChatHistory(roomId) {
         }
 
         async gotTextMsg(id, msg, prepare = false, idx = -1, audioUrl = undefined) {
+            // 检查 TTS 按钮是否启用
+            const ttsBtn = select("#ttsBtn");
+            if (!prepare && ttsBtn && window.VideoTogetherStorage.PublicEnableTTS == false) {
+                return;
+            }
             if (idx > speechSynthesis.getVoices().length) {
                 return;
             }

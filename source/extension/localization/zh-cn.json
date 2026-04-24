@@ -74,6 +74,14 @@
     "chatHistory": "聊天记录",
     "clearChatHistory": "清空聊天记录",
     "chatHistoryCleared": "聊天记录已清空",
+    "chatHistoryModal": "聊天记录管理",
+    "chatHistoryExport": "导出",
+    "chatHistoryDelete": "删除",
+    "chatHistoryPreview": "预览",
+    "chatHistoryClose": "关闭",
+    "chatHistoryEmpty": "暂无聊天记录",
+    "chatHistoryConfirmDelete": "确定删除该房间的聊天记录吗？",
+    "chatHistoryExported": "已导出到剪贴板",
     "chatBubbleDuration": "气泡显示时长（秒）",
     "chatNickname": "你的昵称"
 }

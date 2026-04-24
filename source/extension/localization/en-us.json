@@ -74,6 +74,14 @@
     "chatHistory": "Chat History",
     "clearChatHistory": "Clear Chat History",
     "chatHistoryCleared": "Chat history cleared",
+    "chatHistoryModal": "Chat History Manager",
+    "chatHistoryExport": "Export",
+    "chatHistoryDelete": "Delete",
+    "chatHistoryPreview": "Preview",
+    "chatHistoryClose": "Close",
+    "chatHistoryEmpty": "No chat history",
+    "chatHistoryConfirmDelete": "Are you sure you want to delete this room's chat history?",
+    "chatHistoryExported": "Exported to clipboard",
     "chatBubbleDuration": "Bubble Duration (seconds)",
     "chatNickname": "Your Nickname"
 }

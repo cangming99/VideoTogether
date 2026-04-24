@@ -74,6 +74,14 @@
     "chatHistory": "チャット履歴",
     "clearChatHistory": "チャット履歴をクリア",
     "chatHistoryCleared": "チャット履歴がクリアされました",
+    "chatHistoryModal": "チャット履歴管理",
+    "chatHistoryExport": "エクスポート",
+    "chatHistoryDelete": "削除",
+    "chatHistoryPreview": "プレビュー",
+    "chatHistoryClose": "閉じる",
+    "chatHistoryEmpty": "チャット履歴がありません",
+    "chatHistoryConfirmDelete": "この部屋のチャット履歴を削除してもよろしいですか？",
+    "chatHistoryExported": "クリップボードにエクスポートしました",
     "chatBubbleDuration": "泡表示時間（秒）",
     "chatNickname": "あなたのニックネーム"
 }

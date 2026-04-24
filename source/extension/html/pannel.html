@@ -27,12 +27,6 @@
       </svg>
     </button>
 
-    <button id="videoTogetherMinimize" type="button" aria-label="Minimize" class="vt-modal-title-button" style="padding: 4px;">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M18 12.998H6a1 1 0 0 1 0-2h12a1 1 0 0 1 0 2z"></path>
-      </svg>
-    </button>
-
     <a href="https://setting.2gether.video/" target="_blank" id="videoTogetherSetting" aria-label="Setting" class="vt-modal-title-button" style="padding: 4px;">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
         <path d="M24 13.616v-3.232c-1.651-.587-2.694-.752-3.219-2.019v-.001c-.527-1.271.1-2.134.847-3.707l-2.285-2.285c-1.561.742-2.433 1.375-3.707.847h-.001c-1.269-.526-1.435-1.576-2.019-3.219h-3.232c-.582 1.635-.749 2.692-2.019 3.219h-.001c-1.271.528-2.132-.098-3.707-.847l-2.285 2.285c.745 1.568 1.375 2.434.847 3.707-.527 1.271-1.584 1.438-3.219 2.02v3.232c1.632.58 2.692.749 3.219 2.019.53 1.282-.114 2.166-.847 3.707l2.285 2.286c1.562-.743 2.434-1.375 3.707-.847h.001c1.27.526 1.436 1.579 2.019 3.219h3.232c.582-1.636.75-2.69 2.027-3.222h.001c1.262-.524 2.12.101 3.698.851l2.285-2.286c-.744-1.563-1.375-2.433-.848-3.706.527-1.271 1.588-1.44 3.221-2.021zm-12 2.384c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4z" />
@@ -44,6 +38,12 @@
         <path fill="red" d="M12 4.435c-1.989-5.399-12-4.597-12 3.568 0 4.068 3.06 9.481 12 14.997 8.94-5.516 12-10.929 12-14.997 0-8.118-10-8.999-12-3.568z" />
       </svg>
     </a>
+
+    <button id="videoTogetherMinimize" type="button" aria-label="Minimize" class="vt-modal-title-button" style="padding: 4px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M18 12.998H6a1 1 0 0 1 0-2h12a1 1 0 0 1 0 2z"></path>
+      </svg>
+    </button>
   </div>
 
   <div id="nicknameEditRow" class="nickname-edit-row" style="display: none;">
@@ -58,14 +58,14 @@
     <div class="vt-modal-body">
       <div id="mainPannel" class="content" style="display: flex; flex-direction: column; width: 100%; flex: 1; min-height: 0; gap: 8px;">
         <div id="videoTogetherStatusText" style="color: #666; font-size: 12px;">{$global_notification$}</div>
-        <div id="roomInputContainer" style="display: flex; flex-direction: column; gap: 4px;">
-          <div style="display: flex; align-items: center; gap: 4px;">
-            <span class="ellipsis" id="videoTogetherRoomNameLabel" style="width: 60px;">{$room_input_lable$}</span>
-            <input id="videoTogetherRoomNameInput" autocomplete="off" placeholder="{$room_input_placeholder$}" style="flex: 1;">
+        <div id="roomInputContainer" style="display: flex; flex-direction: column; gap: 8px; padding: 10px 0; width: 100%;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="ellipsis" id="videoTogetherRoomNameLabel" style="width: 70px; flex-shrink: 0;">{$room_input_lable$}</span>
+            <input id="videoTogetherRoomNameInput" autocomplete="off" placeholder="{$room_input_placeholder$}" style="flex: 1; height: 36px; padding: 0 12px; font-size: 14px; border-radius: 8px; border: 1px solid #d9d9d9;">
           </div>
-          <div style="display: flex; align-items: center; gap: 4px;">
-            <span class="ellipsis" id="videoTogetherRoomPasswordLabel" style="width: 60px; display: none;">{$password_input_lable$}</span>
-            <input id="videoTogetherRoomPdIpt" autocomplete="off" placeholder="{$password_input_placeholder$}" style="flex: 1; display: none;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="ellipsis" id="videoTogetherRoomPasswordLabel" style="width: 70px; flex-shrink: 0; display: none;">{$password_input_lable$}</span>
+            <input id="videoTogetherRoomPdIpt" autocomplete="off" placeholder="{$password_input_placeholder$}" style="flex: 1; height: 36px; padding: 0 12px; font-size: 14px; border-radius: 8px; border: 1px solid #d9d9d9; display: none;">
           </div>
         </div>
         <div id="textMessageChat" style="display: none; flex-direction: column; flex: 1; min-height: 0; overflow: hidden;">
@@ -124,36 +124,38 @@
 
     <div class="vt-modal-footer">
 
-      <div id="chatInputRow" style="display: none; gap: 6px; width: 100%;">
-        <input id="textMessageInput" autocomplete="off" placeholder="{$textMessageInput$}" style="flex: 1;">
-        <button id="textMessageSend" class="vt-btn vt-btn-primary" type="button">
+      <div id="chatInputRow" style="display: flex; gap: 6px; width: 100%; align-items: center; flex-direction: row; flex-wrap: nowrap; box-sizing: border-box;">
+        <input id="textMessageInput" autocomplete="off" placeholder="{$textMessageInput$}" style="flex: 1; min-width: 60px; height: 34px; padding: 0 10px; font-size: 13px; border-radius: 6px; border: 1px solid #d9d9d9;">
+        <button id="textMessageSend" class="vt-btn vt-btn-primary" type="button" style="height: 34px; padding: 0 16px; font-size: 13px; border-radius: 6px; flex-shrink: 0;">
           <span>{$textMessageSend$}</span>
         </button>
       </div>
 
       <div id="lobbyBtnGroup" style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;">
-        <button id="videoTogetherCreateButton" class="vt-btn vt-btn-primary" type="button">
+        <button id="videoTogetherCreateButton" class="vt-btn vt-btn-primary" type="button" style="height: 34px; padding: 0 14px; font-size: 14px; border-radius: 10px;">
           <span>{$create_room_button$}</span>
         </button>
-        <button id="videoTogetherJoinButton" class="vt-btn vt-btn-secondary" type="button">
+        <button id="videoTogetherJoinButton" class="vt-btn vt-btn-secondary" type="button" style="height: 34px; padding: 0 14px; font-size: 14px; border-radius: 10px;">
           <span>{$join_room_button$}</span>
+        </button>
+        <button id="chatHistoryBtn" class="vt-btn" type="button" style="height: 34px; padding: 0 14px; font-size: 14px; border-radius: 10px;">
+          <span>{$chatHistory$}</span>
         </button>
       </div>
 
-
       <div id="roomButtonGroup" style="display: none; flex-direction: column; gap: 6px;">
         <div style="display: flex; gap: 6px; justify-content: center;">
-          <button id="videoTogetherExitButton" class="vt-btn vt-btn-dangerous" type="button">
+          <button id="videoTogetherExitButton" class="vt-btn vt-btn-dangerous" type="button" style="height: 34px; padding: 0 14px; font-size: 14px; border-radius: 10px;">
             <span>{$exit_room_button$}</span>
           </button>
-          <button id="callBtn" class="vt-btn vt-btn-dangerous" type="button">
+          <button id="callBtn" class="vt-btn vt-btn-dangerous" type="button" style="height: 34px; padding: 0 14px; font-size: 14px; border-radius: 10px;">
             <span>{$voice_call_button$}</span>
           </button>
-          <button id="videoTogetherHelpButton" class="vt-btn" type="button">
-            <span>{$help_room_button$}</span>
+          <button id="ttsBtn" class="vt-btn" type="button" style="height: 34px; padding: 0 14px; font-size: 14px; border-radius: 10px;">
+            <span>TTS</span>
           </button>
-          <button id="clearChatHistoryBtn" class="vt-btn" type="button">
-            <span>{$clearChatHistory$}</span>
+          <button id="chatHistoryBtnRoom" class="vt-btn" type="button" style="height: 34px; padding: 0 14px; font-size: 14px; border-radius: 10px;">
+            <span>{$chatHistory$}</span>
           </button>
         </div>
         <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
@@ -386,9 +388,9 @@
 
   #textMessageInput {
     border-radius: 8px;
-    padding: 4px 8px;
-    border: 1px solid #ddd;
-    font-size: 12px;
+    padding: 0 12px;
+    border: 1px solid #d9d9d9;
+    font-size: 14px;
     box-sizing: border-box;
   }
 
@@ -428,11 +430,12 @@
     color: #fff;
     border-color: #ff4d4f;
     background-color: #ff4d4f;
-    height: 26px !important;
-    padding: 0 8px !important;
-    font-size: 12px !important;
-    line-height: 26px !important;
-    min-width: 52px !important;
+    height: 34px !important;
+    padding: 0 14px !important;
+    font-size: 14px !important;
+    line-height: 34px !important;
+    border-radius: 10px !important;
+    min-width: auto !important;
     box-sizing: border-box !important;
   }
 
@@ -442,7 +445,7 @@
   }
 
   .vt-btn-dangerous span {
-    line-height: 26px !important;
+    line-height: 34px !important;
   }
 
   .vt-modal-content-item {
@@ -482,7 +485,7 @@
 
   #videoTogetherRoomNameInput,
   #videoTogetherRoomPdIpt {
-    width: 150px;
+    width: auto;
     height: auto;
     font-family: inherit;
     font-size: inherit;
