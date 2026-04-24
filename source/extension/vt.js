@@ -1233,26 +1233,17 @@
 
 // 聊天记录存储 - 使用 window.getGM() 或 browser.storage.local (扩展) 或 GM (用户脚本) 或 localStorage (页面上下文)
 function getStorage() {
-    console.log("getStorage check:", {
-        hasWindowGetGM: !!window.getGM,
-        hasBrowserStorage: typeof browser !== 'undefined' && !!browser.storage,
-        hasGM: typeof GM !== 'undefined'
-    });
     if (window.getGM) {
         const gm = window.getGM();
-        console.log("window.getGM() returned:", gm);
         return gm;
     }
     if (typeof browser !== 'undefined' && browser.storage && browser.storage.local) {
-        console.log("Using browser.storage.local");
         return browser.storage.local;
     }
     if (typeof GM !== 'undefined') {
-        console.log("Using GM");
         return GM;
     }
     // Fallback to localStorage for page context
-    console.log("Using localStorage fallback");
     return {
         get: async (key) => {
             const value = localStorage.getItem(key);
@@ -1354,43 +1345,71 @@ async function clearRoomChatHistory(roomId) {
     }
 
     class VideoTogetherFlyPannel {
-        showBubbleNotification(sender, content) {
+        showBubbleNotification(sender, content, container, position) {
             // 清理超过5个的旧气泡
-            const existingBubbles = document.querySelectorAll(".chatBubble");
+            const existingBubbles = container.querySelectorAll(".chatBubble");
             if (existingBubbles.length >= 5) {
                 existingBubbles[0].remove();
             }
 
             // 给所有现有气泡上移
             existingBubbles.forEach(b => {
-                const currentBottom = parseInt(b.style.bottom) || 60;
-                b.style.bottom = (currentBottom + 55) + 'px';
+                if (position && position.type === 'fullscreen') {
+                    const currentTop = parseInt(b.style.top) || -45;
+                    b.style.top = (currentTop - 40) + 'px';
+                } else {
+                    const currentBottom = parseInt(b.style.bottom) || 45;
+                    b.style.bottom = (currentBottom + 40) + 'px';
+                }
             });
 
             // 创建气泡
             const bubble = document.createElement("div");
             bubble.className = "chatBubble";
-            bubble.style.cssText = `
-                position: fixed;
-                right: 20px;
-                bottom: 60px;
-                background: rgba(30, 30, 30, 0.85);
-                backdrop-filter: blur(10px);
-                border-radius: 12px;
-                padding: 10px 14px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-                max-width: 220px;
-                font-size: 13px;
-                z-index: 2147483647;
-                color: #fff;
-                opacity: 0;
-                transform: translateY(10px);
-                transition: opacity 0.3s ease-out, transform 0.3s ease-out, bottom 0.3s ease-out;
-            `;
+            let bubbleStyle;
+            if (position && position.type === 'fullscreen') {
+                // 全屏时使用绝对定位，附加到 bubbles-container
+                bubbleStyle = `
+                    position: absolute;
+                    right: 0;
+                    top: -45px;
+                    background: rgba(30, 30, 30, 0.85);
+                    backdrop-filter: blur(10px);
+                    border-radius: 12px;
+                    padding: 10px 14px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                    max-width: 220px;
+                    font-size: 13px;
+                    z-index: 2147483647;
+                    color: #fff;
+                    opacity: 0;
+                    transform: translateY(10px);
+                    transition: opacity 0.3s ease-out, transform 0.3s ease-out, top 0.3s ease-out;
+                `;
+            } else {
+                bubbleStyle = `
+                    position: fixed;
+                    right: 20px;
+                    bottom: 45px;
+                    background: rgba(30, 30, 30, 0.85);
+                    backdrop-filter: blur(10px);
+                    border-radius: 12px;
+                    padding: 10px 14px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                    max-width: 220px;
+                    font-size: 13px;
+                    z-index: 2147483647;
+                    color: #fff;
+                    opacity: 0;
+                    transform: translateY(10px);
+                    transition: opacity 0.3s ease-out, transform 0.3s ease-out, bottom 0.3s ease-out;
+                `;
+            }
+            bubble.style.cssText = bubbleStyle;
 
             bubble.innerHTML = `<span style="color: #4ecdc4; font-weight: 600;">${escapeHtml(sender)}</span>: ${escapeHtml(content)}`;
 
-            document.body.appendChild(bubble);
+            container.appendChild(bubble);
 
             // 立即显示
             requestAnimationFrame(() => {
@@ -1452,13 +1471,30 @@ async function clearRoomChatHistory(roomId) {
                     let closeBtn = wrapper.getElementById('close-btn');
                     let expanded = true;
                     const chatHistoryEl = wrapper.getElementById('chatHistory');
+                    // 初始状态已展开，显示聊天记录
+                    if (chatHistoryEl) {
+                        chatHistoryEl.classList.add('show');
+                    }
+                    // 加载聊天历史
+                    if (chatHistoryEl) {
+                        const roomId = extension.ctxRoomId || "default";
+                        getRoomChatHistory(roomId).then(messages => {
+                            if (chatHistoryEl.children.length === 0) {
+                                messages.forEach(msg => {
+                                    renderChatMessage(chatHistoryEl, msg.sender, msg.content, msg.isSelf);
+                                });
+                            }
+                        }).catch(() => {});
+                    }
                     function expand() {
                         if (expanded) {
+                            // 当前是展开状态，切换到收起
                             expandBtn.innerText = '>'
                             sendBtn.style.display = 'none';
                             msgInput.classList.remove('expand');
                             if (chatHistoryEl) chatHistoryEl.classList.remove('show');
                         } else {
+                            // 当前是收起状态，切换到展开
                             expandBtn.innerText = '<';
                             sendBtn.style.display = 'inline-block';
                             msgInput.classList.add("expand");
@@ -1490,8 +1526,8 @@ async function clearRoomChatHistory(roomId) {
                         }
 
                         // 气泡通知（仅接收方，全屏面板收起时显示）
-                        if (!isSelf && expanded) {
-                            this.showBubbleNotification(parsed.sender, parsed.content);
+                        if (!isSelf && !expanded) {
+                            this.showBubbleNotification(parsed.sender, parsed.content, this.fullscreenWrapper.getElementById('bubbles-container'), { type: 'fullscreen' });
                         }
 
                         // TTS（发送人自己不发TTS）
@@ -1585,7 +1621,7 @@ async function clearRoomChatHistory(roomId) {
                     if (!isSelf) {
                         const chatHistoryEl = select("#chatHistory");
                         if (!chatHistoryEl || chatHistoryEl.offsetParent === null) {
-                            this.showBubbleNotification(parsed.sender, parsed.content);
+                            this.showBubbleNotification(parsed.sender, parsed.content, document.body, null);
                         }
                     }
 

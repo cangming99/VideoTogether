@@ -17,6 +17,13 @@
         z-index: 2147483647;
     }
 
+    #bubbles-container {
+        position: absolute;
+        bottom: 100%;
+        right: 0;
+        width: 220px;
+    }
+
     .container input[type='text'] {
         padding: 0px;
         flex-grow: 1;
@@ -118,6 +125,7 @@
     }
 </style>
 <div class="container" id="container">
+    <div id="bubbles-container"></div>
     <div id="chatHistory"></div>
     <button id="expand-button">&lt;</button>
     <div style="padding: 0 5px 0 5px;" class="user-info" id="user-info">
