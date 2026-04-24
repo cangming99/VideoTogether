@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Video Together 一起看视频
 // @namespace    https://2gether.video/
-// @version      1776998720
+// @version      1776998977
 // @description  Watch video together 一起看视频
 // @author       maggch@outlook.com
 // @match        *://*/*
@@ -3179,8 +3179,8 @@ async function clearRoomChatHistory(roomId) {
         initNicknameDropdown() {
             if (!this.wrapper) return;
 
-            // getGM polyfill for userscript context
-            const gm = typeof getGM === 'function' ? getGM() : GM;
+            // getGM may not be defined in userscript context
+            const gmApi = (typeof getGM === 'function') ? getGM() : (typeof GM !== 'undefined' ? GM : { getValue: (k) => Promise.resolve(null), setValue: async () => {} });
 
             const nicknameBtn = this.wrapper.querySelector("#nicknameBtn");
             const nicknameMenu = this.wrapper.querySelector("#nicknameMenu");
@@ -3195,7 +3195,7 @@ async function clearRoomChatHistory(roomId) {
             if (!nicknameBtn || !nicknameMenu) return;
 
             // Load saved nickname
-            gm.getValue("ChatNickname").then(nickname => {
+            gmApi.getValue("ChatNickname").then(nickname => {
                 if (nickname) {
                     nicknameText.textContent = nickname;
                 }
@@ -3228,7 +3228,7 @@ async function clearRoomChatHistory(roomId) {
             // Save nickname
             saveNicknameBtn.addEventListener("click", async () => {
                 const newNickname = nicknameInput.value.trim() || "匿名用户";
-                await gm.setValue("ChatNickname", newNickname);
+                await gmApi.setValue("ChatNickname", newNickname);
                 nicknameText.textContent = newNickname;
                 nicknameInputContainer.classList.remove("show");
             });
@@ -3539,7 +3539,7 @@ async function clearRoomChatHistory(roomId) {
 
             this.activatedVideo = undefined;
             this.tempUser = generateTempUserId();
-            this.version = '1776998720';
+            this.version = '1776998977';
             this.isMain = (window.self == window.top);
             this.UserId = undefined;
 
