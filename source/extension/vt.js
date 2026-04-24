@@ -1749,8 +1749,11 @@ async function clearRoomChatHistory(roomId) {
         initNicknameDropdown() {
             if (!this.wrapper) return;
 
-            // getGM may not be defined in userscript context
-            const gmApi = (typeof getGM === 'function') ? getGM() : (typeof GM !== 'undefined' ? GM : { getValue: (k) => Promise.resolve(null), setValue: async () => {} });
+            // For extension context, use browser.storage.local directly
+            // For userscript context, use GM API
+            const storage = typeof browser !== 'undefined' && browser.storage
+                ? browser.storage.local
+                : (typeof GM !== 'undefined' ? GM : null);
 
             const nicknameBtn = this.wrapper.querySelector("#nicknameBtn");
             const nicknameMenu = this.wrapper.querySelector("#nicknameMenu");
@@ -1764,12 +1767,14 @@ async function clearRoomChatHistory(roomId) {
 
             if (!nicknameBtn || !nicknameMenu) return;
 
-            // Load saved nickname
-            gmApi.getValue("ChatNickname").then(nickname => {
-                if (nickname) {
-                    nicknameText.textContent = nickname;
-                }
-            });
+            // Load saved nickname (browser.storage.local.get returns object with key)
+            if (storage) {
+                storage.get("ChatNickname").then(result => {
+                    if (result.ChatNickname) {
+                        nicknameText.textContent = result.ChatNickname;
+                    }
+                });
+            }
 
             // Toggle nickname menu
             nicknameBtn.addEventListener("click", (e) => {
@@ -1798,7 +1803,9 @@ async function clearRoomChatHistory(roomId) {
             // Save nickname
             saveNicknameBtn.addEventListener("click", async () => {
                 const newNickname = nicknameInput.value.trim() || "匿名用户";
-                await gmApi.setValue("ChatNickname", newNickname);
+                if (storage) {
+                    await storage.set({ ChatNickname: newNickname });
+                }
                 nicknameText.textContent = newNickname;
                 nicknameInputContainer.classList.remove("show");
             });
