@@ -1749,6 +1749,9 @@ async function clearRoomChatHistory(roomId) {
         initNicknameDropdown() {
             if (!this.wrapper) return;
 
+            // getGM polyfill for userscript context
+            const gm = typeof getGM === 'function' ? getGM() : GM;
+
             const nicknameBtn = this.wrapper.querySelector("#nicknameBtn");
             const nicknameMenu = this.wrapper.querySelector("#nicknameMenu");
             const nicknameText = this.wrapper.querySelector("#nicknameText");
@@ -1762,7 +1765,7 @@ async function clearRoomChatHistory(roomId) {
             if (!nicknameBtn || !nicknameMenu) return;
 
             // Load saved nickname
-            getGM().getValue("ChatNickname").then(nickname => {
+            gm.getValue("ChatNickname").then(nickname => {
                 if (nickname) {
                     nicknameText.textContent = nickname;
                 }
@@ -1795,7 +1798,7 @@ async function clearRoomChatHistory(roomId) {
             // Save nickname
             saveNicknameBtn.addEventListener("click", async () => {
                 const newNickname = nicknameInput.value.trim() || "匿名用户";
-                await getGM().setValue("ChatNickname", newNickname);
+                await gm.setValue("ChatNickname", newNickname);
                 nicknameText.textContent = newNickname;
                 nicknameInputContainer.classList.remove("show");
             });
