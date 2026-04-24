@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Video Together 一起看视频
 // @namespace    https://2gether.video/
-// @version      1776997135
+// @version      1776997316
 // @description  Watch video together 一起看视频
 // @author       maggch@outlook.com
 // @match        *://*/*
@@ -3177,15 +3177,17 @@ async function clearRoomChatHistory(roomId) {
         }
 
         initNicknameDropdown() {
-            const nicknameBtn = select("#nicknameBtn");
-            const nicknameMenu = select("#nicknameMenu");
-            const nicknameText = select("#nicknameText");
-            const nicknameInputContainer = select("#nicknameInputContainer");
-            const nicknameInput = select("#nicknameInput");
-            const editNicknameBtn = select("#editNicknameBtn");
-            const saveNicknameBtn = select("#saveNicknameBtn");
-            const cancelNicknameBtn = select("#cancelNicknameBtn");
-            const cancelNicknameEditBtn = select("#cancelNicknameEditBtn");
+            if (!this.wrapper) return;
+
+            const nicknameBtn = this.wrapper.querySelector("#nicknameBtn");
+            const nicknameMenu = this.wrapper.querySelector("#nicknameMenu");
+            const nicknameText = this.wrapper.querySelector("#nicknameText");
+            const nicknameInputContainer = this.wrapper.querySelector("#nicknameInputContainer");
+            const nicknameInput = this.wrapper.querySelector("#nicknameInput");
+            const editNicknameBtn = this.wrapper.querySelector("#editNicknameBtn");
+            const saveNicknameBtn = this.wrapper.querySelector("#saveNicknameBtn");
+            const cancelNicknameBtn = this.wrapper.querySelector("#cancelNicknameBtn");
+            const cancelNicknameEditBtn = this.wrapper.querySelector("#cancelNicknameEditBtn");
 
             if (!nicknameBtn || !nicknameMenu) return;
 
@@ -3534,7 +3536,7 @@ async function clearRoomChatHistory(roomId) {
 
             this.activatedVideo = undefined;
             this.tempUser = generateTempUserId();
-            this.version = '1776997135';
+            this.version = '1776997316';
             this.isMain = (window.self == window.top);
             this.UserId = undefined;
 
@@ -5300,6 +5302,8 @@ async function clearRoomChatHistory(roomId) {
         }
 
         EnableDraggable() {
+            if (!window.videoTogetherFlyPannel) return;
+
             function filter(e) {
                 let target = undefined;
                 if (window.videoTogetherFlyPannel.videoTogetherHeader.contains(e.target)) {
