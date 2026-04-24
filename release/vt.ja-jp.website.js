@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Video Together 一起看视频
 // @namespace    https://2gether.video/
-// @version      1776999607
+// @version      1777026049
 // @description  Watch video together 一起看视频
 // @author       maggch@outlook.com
 // @match        *://*/*
@@ -1037,7 +1037,7 @@
                 m3u8ContentCache[data['data'].m3u8Url] = data['data'].content;
             }
             if (data['method'] == 'send_txtmsg' && getEnableTextMessage()) {
-                popupError("新しいメッセージ (<a id='changeVoiceBtn' style='color:inherit' href='#''>音声変更</a>)");
+                popupError("VideoTogether: 新しいメッセージ (<a id='changeVoiceBtn' style='color:inherit' href='#''>音声変更</a>)");
                 extension.gotTextMsg(data['data'].id, data['data'].msg, false, -1, data['data'].audioUrl);
                 sendMessageToTop(MessageType.GotTxtMsg, { id: data['data'].id, msg: data['data'].msg });
             }
@@ -1154,7 +1154,6 @@
         },
         set status(s) {
             this._status = s;
-            let disabledMic = select("#disabledMic");
             let micBtn = select('#micBtn');
             let audioBtn = select('#audioBtn');
             let callBtn = select("#callBtn");
@@ -1170,10 +1169,10 @@
                 case VoiceStatus.STOP:
                     break;
                 case VoiceStatus.MUTED:
-                    show(disabledMic);
+                    micBtn.classList.add('muted');
                     break;
                 case VoiceStatus.UNMUTED:
-                    hide(disabledMic);
+                    micBtn.classList.remove('muted');
                     break;
                 case VoiceStatus.ERROR:
                     var x = select("#snackbar");
@@ -1631,18 +1630,69 @@
         } // End Function _utf8_decode
     }
 
-// 聊天记录存储
+// 聊天记录存储 - 使用 window.getGM() 或 browser.storage.local (扩展) 或 GM (用户脚本) 或 localStorage (页面上下文)
+function getStorage() {
+    console.log("getStorage check:", {
+        hasWindowGetGM: !!window.getGM,
+        hasBrowserStorage: typeof browser !== 'undefined' && !!browser.storage,
+        hasGM: typeof GM !== 'undefined'
+    });
+    if (window.getGM) {
+        const gm = window.getGM();
+        console.log("window.getGM() returned:", gm);
+        return gm;
+    }
+    if (typeof browser !== 'undefined' && browser.storage && browser.storage.local) {
+        console.log("Using browser.storage.local");
+        return browser.storage.local;
+    }
+    if (typeof GM !== 'undefined') {
+        console.log("Using GM");
+        return GM;
+    }
+    // Fallback to localStorage for page context
+    console.log("Using localStorage fallback");
+    return {
+        get: async (key) => {
+            const value = localStorage.getItem(key);
+            return value ? JSON.parse(value) : null;
+        },
+        set: async (key, value) => {
+            localStorage.setItem(key, JSON.stringify(value));
+        }
+    };
+}
+
+async function getNickname() {
+    const storage = getStorage();
+    console.log("getNickname storage:", storage);
+    if (storage) {
+        const result = await storage.get("ChatNickname");
+        console.log("getNickname result:", result);
+        return result && result.ChatNickname ? result.ChatNickname : "匿名用户";
+    }
+    console.log("getNickname: no storage, returning default");
+    return "匿名用户";
+}
+
 async function getChatHistory() {
     try {
-        const history = await getGM().getValue("ChatHistory");
-        return history || {};
+        const storage = getStorage();
+        if (storage) {
+            const result = await storage.get("ChatHistory");
+            return result && result.ChatHistory ? result.ChatHistory : {};
+        }
+        return {};
     } catch {
         return {};
     }
 }
 
 async function saveChatHistory(history) {
-    await getGM().setValue("ChatHistory", history);
+    const storage = getStorage();
+    if (storage) {
+        await storage.set("ChatHistory", { ChatHistory: history });
+    }
 }
 
 async function addMessageToHistory(roomId, sender, content, isSelf) {
@@ -1716,32 +1766,53 @@ async function clearRoomChatHistory(roomId) {
             const existingBubble = select("#chatBubble");
             if (existingBubble) existingBubble.remove();
 
-            // 创建气泡
+            // 创建气泡 - 现代简约风格
             const bubble = document.createElement("div");
             bubble.id = "chatBubble";
             bubble.style.cssText = `
                 position: fixed;
-                bottom: 45px;
-                right: 15px;
-                background: #fff;
-                border: 1px solid #ddd;
-                border-radius: 8px;
-                padding: 8px 12px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-                max-width: 200px;
-                font-size: 12px;
+                bottom: 60px;
+                right: 20px;
+                background: rgba(30, 30, 30, 0.85);
+                backdrop-filter: blur(10px);
+                border-radius: 12px;
+                padding: 10px 14px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                max-width: 220px;
+                font-size: 13px;
                 z-index: 2147483647;
+                color: #fff;
+                animation: slideInFadeOut 0.3s ease-out forwards;
             `;
-            bubble.innerHTML = `<strong>${escapeHtml(sender)}:</strong> ${escapeHtml(content)}`;
+
+            // 添加淡出动画样式
+            if (!document.getElementById('bubbleAnimStyle')) {
+                const style = document.createElement('style');
+                style.id = 'bubbleAnimStyle';
+                style.textContent = `
+                    @keyframes slideInFadeOut {
+                        0% { opacity: 0; transform: translateY(10px); }
+                        10% { opacity: 1; transform: translateY(0); }
+                        80% { opacity: 1; }
+                        100% { opacity: 0; }
+                    }
+                    @keyframes fadeOutBubble {
+                        0% { opacity: 1; }
+                        100% { opacity: 0; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
+            bubble.innerHTML = `<span style="color: #4ecdc4; font-weight: 600;">${escapeHtml(sender)}</span>: ${escapeHtml(content)}`;
 
             document.body.appendChild(bubble);
 
-            // 获取显示时长配置
-            getGM().getValue("ChatBubbleDuration").then(duration => {
-                setTimeout(() => {
-                    bubble.remove();
-                }, duration || 5000);
-            });
+            // 3秒后自动消失
+            setTimeout(() => {
+                bubble.style.animation = 'fadeOutBubble 0.3s ease-out forwards';
+                setTimeout(() => bubble.remove(), 300);
+            }, 3000);
         }
 
         constructor() {
@@ -1885,7 +1956,7 @@ async function clearRoomChatHistory(roomId) {
                     wrapper.getElementById('expand-button').addEventListener('click', () => expand());
                     sendBtn.onclick = async () => {
                         extension.currentSendingMsgId = generateUUID();
-                        const nickname = await getGM().getValue("ChatNickname") || "匿名用户";
+                        const nickname = await getNickname();
                         const content = msgInput.value;
                         const wrappedMsg = wrapMessage(nickname, content);
                         sendMessageToTop(MessageType.SendTxtMsg, { currentSendingMsgId: extension.currentSendingMsgId, value: wrappedMsg });
@@ -1956,127 +2027,97 @@ async function clearRoomChatHistory(roomId) {
                 updateInnnerHTML(wrapper, `<div id="peer" style="display: none;"></div>
 <div id="videoTogetherFlyPannel" style="display: none;">
   <div id="videoTogetherHeader" class="vt-modal-header">
-    <div style="display: flex;align-items: center;">
-      <img style="width: 16px; height: 16px;"
-        src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAACrFBMVEXg9b7e87jd87jd9Lnd9Lre9Lng9b/j98jm98vs99fy9ubu89/e1sfJqKnFnqLGoaXf9Lvd87Xe87fd8rfV67Ti9sbk98nm9sze48TX3rjU1rTKr6jFnaLe9Lfe87Xe9LjV7LPN4q3g78PJuqfQ1a7OzarIsabEnaHi9sXd8rvd8rbd87axx4u70Jrl+cvm+szQxq25lZTR1a7KvaXFo6LFnaHEnKHd6r3Y57TZ7bLb8bTZ7rKMomClun/k+MrOx6yue4PIvqfP06vLv6fFoqLEnKDT27DS3a3W6K7Y7bDT6auNq2eYn3KqlYShYXTOwLDAzZ7MyanKtqbEoaHDm6DDm5/R2K3Q2KzT4q3W6a7P3amUhWp7SEuMc2rSyri3zJe0xpPV17TKuqbGrqLEnqDQ2K3O06rP0arR2qzJx6GZX160j4rP1LOiuH2GnVzS3rXb47zQ063OzanHr6PDnaDMxajIsaXLwKfEt5y6mI/GyqSClVZzi0bDzp+8nY/d6L/X4rbQ1qzMyKjEqKHFpqLFpaLGqaO2p5KCjlZ5jky8z5izjoOaXmLc5r3Z57jU4K7S3K3NyqnBm56Mg2KTmWnM0KmwhH2IOUunfXnh8cXe8b7Z7LPV4rDBmZ3Cmp+6mZWkk32/qZihbG97P0OdinXQ3rTk+Mjf9L/d8rja6ri9lpqnh4qhgoWyk5Kmd3qmfHW3oou2vZGKpmaUrXDg9MPf9L3e876yj5Ori42Mc3aDbG6MYmyifXfHyaPU3rHH0aKDlVhkejW70Zbf9bze87be87ng9cCLcnWQd3qEbG9/ZmmBXmSflYS4u5ra5Lnd6r7U5ba2ypPB153c87re9b2Ba22EbW+AamyDb3CNgXmxsZng7sTj9sjk98rk+Mng9cHe9Lze9Lrd87n////PlyWlAAAAAWJLR0TjsQauigAAAAlwSFlzAAAOxAAADsQBlSsOGwAAAAd0SU1FB+YGGQYXBzHy0g0AAAEbSURBVBjTARAB7/4AAAECAwQFBgcICQoLDA0ODwAQEREREhMUFRYXGBkaGxwOAAYdHhEfICEWFiIjJCUmDicAKCkqKx8sLS4vMDEyMzQ1NgA3ODk6Ozw9Pj9AQUJDRDVFAEZHSElKS0xNTk9QUVJTVFUAVldYWVpbXF1eX2BhYmNkVABlZmdoaWprbG1ub3BxcnN0AEJ1dnd4eXp7fH1+f4CBgoMAc4QnhYaHiImKi4yNjo+QkQBFVFU2kpOUlZaXmJmam5ucAFRVnZ6foKGio6SlpqeoE6kAVaqrrK2ur7CxsrO0tQEDtgC3uLm6u7y9vr/AwcLDxMXGAMfIycrLzM3Oz9DR0tMdAdQA1da619jZ2tvc3d7f4OEB4iRLaea64H7qAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDIyLTA2LTI1VDA2OjIzOjAyKzAwOjAwlVQlhgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyMi0wNi0yNVQwNjoyMzowMiswMDowMOQJnToAAAAgdEVYdHNvZnR3YXJlAGh0dHBzOi8vaW1hZ2VtYWdpY2sub3JnvM8dnQAAABh0RVh0VGh1bWI6OkRvY3VtZW50OjpQYWdlcwAxp/+7LwAAABh0RVh0VGh1bWI6OkltYWdlOjpIZWlnaHQAMTkyQF1xVQAAABd0RVh0VGh1bWI6OkltYWdlOjpXaWR0aAAxOTLTrCEIAAAAGXRFWHRUaHVtYjo6TWltZXR5cGUAaW1hZ2UvcG5nP7JWTgAAABd0RVh0VGh1bWI6Ok1UaW1lADE2NTYxMzgxODJHYkS0AAAAD3RFWHRUaHVtYjo6U2l6ZQAwQkKUoj7sAAAAVnRFWHRUaHVtYjo6VVJJAGZpbGU6Ly8vbW50bG9nL2Zhdmljb25zLzIwMjItMDYtMjUvNGU5YzJlYjRjNmRhMjIwZDgzYjcyOTYxZmI1ZTJiY2UuaWNvLnBuZ7tNVVEAAAAASUVORK5CYII=">
-      <div class="vt-modal-title">VideoTogether</div>
-    </div>
+    <span id="memberCount" style="font-size: 12px; color: #888; flex-shrink: 0;"></span>
+    <span id="videoTogetherRoleText" style="font-size: 12px; color: #666; flex-shrink: 0; margin-left: 8px;"></span>
 
-    <button id="downloadBtn" type="button" class="vt-modal-title-button vt-modal-easyshare" style="display: none;">
-      <span class="vt-modal-close-x">
-        <span role="img" aria-label="Setting" class="vt-anticon vt-anticon-close vt-modal-close-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
-            stroke="currentColor" stroke-width="1.67">
-            <path
-              d="M12.5535 16.5061C12.4114 16.6615 12.2106 16.75 12 16.75C11.7894 16.75 11.5886 16.6615 11.4465 16.5061L7.44648 12.1311C7.16698 11.8254 7.18822 11.351 7.49392 11.0715C7.79963 10.792 8.27402 10.8132 8.55352 11.1189L11.25 14.0682V3C11.25 2.58579 11.5858 2.25 12 2.25C12.4142 2.25 12.75 2.58579 12.75 3V14.0682L15.4465 11.1189C15.726 10.8132 16.2004 10.792 16.5061 11.0715C16.8118 11.351 16.833 11.8254 16.5535 12.1311L12.5535 16.5061Z"
-              fill="currentColor" />
-            <path
-              d="M3.75 15C3.75 14.5858 3.41422 14.25 3 14.25C2.58579 14.25 2.25 14.5858 2.25 15V15.0549C2.24998 16.4225 2.24996 17.5248 2.36652 18.3918C2.48754 19.2919 2.74643 20.0497 3.34835 20.6516C3.95027 21.2536 4.70814 21.5125 5.60825 21.6335C6.47522 21.75 7.57754 21.75 8.94513 21.75H15.0549C16.4225 21.75 17.5248 21.75 18.3918 21.6335C19.2919 21.5125 20.0497 21.2536 20.6517 20.6516C21.2536 20.0497 21.5125 19.2919 21.6335 18.3918C21.75 17.5248 21.75 16.4225 21.75 15.0549V15C21.75 14.5858 21.4142 14.25 21 14.25C20.5858 14.25 20.25 14.5858 20.25 15C20.25 16.4354 20.2484 17.4365 20.1469 18.1919C20.0482 18.9257 19.8678 19.3142 19.591 19.591C19.3142 19.8678 18.9257 20.0482 18.1919 20.1469C17.4365 20.2484 16.4354 20.25 15 20.25H9C7.56459 20.25 6.56347 20.2484 5.80812 20.1469C5.07435 20.0482 4.68577 19.8678 4.40901 19.591C4.13225 19.3142 3.9518 18.9257 3.85315 18.1919C3.75159 17.4365 3.75 16.4354 3.75 15Z"
-              fill="currentColor" />
-          </svg>
-        </span>
-      </span>
+    <button class="nickname-btn" id="nicknameBtn" style="margin-left: 8px;">
+      <span>👤</span>
+      <span id="nicknameText">匿名用户</span>
     </button>
 
-    <button style="display: none;" id="easyShareCopyBtn" type="button" class="vt-modal-title-button vt-modal-easyshare">
-      <span class="vt-modal-close-x">
-        <span role="img" aria-label="Setting" class="vt-anticon vt-anticon-close vt-modal-close-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32">
-            <path fill="currentColor"
-              d="M0 25.472q0 2.368 1.664 4.032t4.032 1.664h18.944q2.336 0 4-1.664t1.664-4.032v-8.192l-3.776 3.168v5.024q0 0.8-0.544 1.344t-1.344 0.576h-18.944q-0.8 0-1.344-0.576t-0.544-1.344v-18.944q0-0.768 0.544-1.344t1.344-0.544h9.472v-3.776h-9.472q-2.368 0-4.032 1.664t-1.664 4v18.944zM5.696 19.808q0 2.752 1.088 5.28 0.512-2.944 2.24-5.344t4.288-3.872 5.632-1.664v5.6l11.36-9.472-11.36-9.472v5.664q-2.688 0-5.152 1.056t-4.224 2.848-2.848 4.224-1.024 5.152zM32 22.080v0 0 0z">
-            </path>
-          </svg>
-        </span>
-      </span>
+    <div style="flex: 1;"></div>
+
+    <span id="roomNameDisplay" style="font-size: 12px; color: #333; flex-shrink: 0; display: none;"></span>
+
+    <div style="flex: 1;"></div>
+
+    <button id="downloadBtn" type="button" class="vt-modal-title-button vt-modal-easyshare" style="display: none; padding: 4px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 16.5061C11.5894 16.6615 11.2106 16.75 11 16.75C10.7894 16.75 10.5886 16.6615 10.4465 16.5061L6.44648 12.1311C6.16698 11.8254 6.18822 11.351 6.49392 11.0715C6.79963 10.792 7.27402 10.8132 7.55352 11.1189L10.25 14.0682V3C10.25 2.58579 10.5858 2.25 11 2.25C11.4142 2.25 11.75 2.58579 11.75 3V14.0682L14.4465 11.1189C14.726 10.8132 15.2004 10.792 15.5061 11.0715C15.8118 11.351 15.833 11.8254 15.5535 12.1311L11.5535 16.5061Z" fill="currentColor"/>
+      </svg>
     </button>
 
-    <div class="nickname-dropdown" id="nicknameDropdown">
-      <button class="nickname-btn" id="nicknameBtn">
-        <span>👤</span>
-        <span id="nicknameText">匿名用户</span>
-        <span>▼</span>
-      </button>
-      <div class="nickname-menu" id="nicknameMenu">
-        <div class="nickname-menu-item" id="editNicknameBtn">编辑昵称</div>
-        <div class="nickname-menu-item" id="cancelNicknameBtn">取消</div>
-      </div>
-      <div class="nickname-input-container" id="nicknameInputContainer">
-        <input type="text" id="nicknameInput" placeholder="输入昵称" maxlength="20" />
-        <button class="nickname-save-btn" id="saveNicknameBtn">保存</button>
-        <button class="nickname-cancel-btn" id="cancelNicknameEditBtn">取消</button>
-      </div>
-    </div>
-
-    <button id="videoTogetherMinimize" type="button" aria-label="Minimize" class="vt-modal-close vt-modal-title-button">
-      <span class="vt-modal-close-x">
-        <span role="img" aria-label="minimize" class="vt-anticon vt-anticon-close vt-modal-close-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true"
-            role="img" class="iconify iconify--ic" width="20" height="20" preserveAspectRatio="xMidYMid meet"
-            viewBox="0 0 24 24">
-            <path fill="currentColor" d="M18 12.998H6a1 1 0 0 1 0-2h12a1 1 0 0 1 0 2z"></path>
-          </svg>
-        </span>
-      </span>
+    <button style="display: none;" id="easyShareCopyBtn" type="button" class="vt-modal-title-button vt-modal-easyshare" style="padding: 4px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32">
+        <path fill="currentColor" d="M0 25.472q0 2.368 1.664 4.032t4.032 1.664h18.944q2.336 0 4-1.664t1.664-4.032v-8.192l-3.776 3.168v5.024q0 0.8-0.544 1.344t-1.344 0.576h-18.944q-0.8 0-1.344-0.576t-0.544-1.344v-18.944q0-0.768 0.544-1.344t1.344-0.544h9.472v-3.776h-9.472q-2.368 0-4.032 1.664t-1.664 4v18.944z"/>
+      </svg>
     </button>
 
-    <a href="https://setting.2gether.video/" target="_blank" id="videoTogetherSetting" type="button"
-      aria-label="Setting" class="vt-modal-setting vt-modal-title-button">
-      <span class="vt-modal-close-x">
-        <span role="img" aria-label="Setting" class="vt-anticon vt-anticon-close vt-modal-close-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
-            <path fill="currentColor"
-              d="M24 13.616v-3.232c-1.651-.587-2.694-.752-3.219-2.019v-.001c-.527-1.271.1-2.134.847-3.707l-2.285-2.285c-1.561.742-2.433 1.375-3.707.847h-.001c-1.269-.526-1.435-1.576-2.019-3.219h-3.232c-.582 1.635-.749 2.692-2.019 3.219h-.001c-1.271.528-2.132-.098-3.707-.847l-2.285 2.285c.745 1.568 1.375 2.434.847 3.707-.527 1.271-1.584 1.438-3.219 2.02v3.232c1.632.58 2.692.749 3.219 2.019.53 1.282-.114 2.166-.847 3.707l2.285 2.286c1.562-.743 2.434-1.375 3.707-.847h.001c1.27.526 1.436 1.579 2.019 3.219h3.232c.582-1.636.75-2.69 2.027-3.222h.001c1.262-.524 2.12.101 3.698.851l2.285-2.286c-.744-1.563-1.375-2.433-.848-3.706.527-1.271 1.588-1.44 3.221-2.021zm-12 2.384c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4z" />
-          </svg>
-        </span>
-      </span>
+    <button id="videoTogetherMinimize" type="button" aria-label="Minimize" class="vt-modal-title-button" style="padding: 4px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M18 12.998H6a1 1 0 0 1 0-2h12a1 1 0 0 1 0 2z"></path>
+      </svg>
+    </button>
+
+    <a href="https://setting.2gether.video/" target="_blank" id="videoTogetherSetting" aria-label="Setting" class="vt-modal-title-button" style="padding: 4px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M24 13.616v-3.232c-1.651-.587-2.694-.752-3.219-2.019v-.001c-.527-1.271.1-2.134.847-3.707l-2.285-2.285c-1.561.742-2.433 1.375-3.707.847h-.001c-1.269-.526-1.435-1.576-2.019-3.219h-3.232c-.582 1.635-.749 2.692-2.019 3.219h-.001c-1.271.528-2.132-.098-3.707-.847l-2.285 2.285c.745 1.568 1.375 2.434.847 3.707-.527 1.271-1.584 1.438-3.219 2.02v3.232c1.632.58 2.692.749 3.219 2.019.53 1.282-.114 2.166-.847 3.707l2.285 2.286c1.562-.743 2.434-1.375 3.707-.847h.001c1.27.526 1.436 1.579 2.019 3.219h3.232c.582-1.636.75-2.69 2.027-3.222h.001c1.262-.524 2.12.101 3.698.851l2.285-2.286c-.744-1.563-1.375-2.433-.848-3.706.527-1.271 1.588-1.44 3.221-2.021zm-12 2.384c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4z" />
+      </svg>
     </a>
 
-    <a href="https://afdian.com/a/videotogether" target="_blank" id="vtDonate" type="button"
-      class="vt-modal-donate vt-modal-title-button">
-      <span class="vt-modal-close-x">
-        <span role="img" class="vt-anticon vt-anticon-close vt-modal-close-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
-            <path fill="red"
-              d="M12 4.435c-1.989-5.399-12-4.597-12 3.568 0 4.068 3.06 9.481 12 14.997 8.94-5.516 12-10.929 12-14.997 0-8.118-10-8.999-12-3.568z" />
-          </svg>
-        </span>
-      </span>
+    <a href="https://afdian.com/a/videotogether" target="_blank" id="vtDonate" class="vt-modal-title-button" style="padding: 4px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+        <path fill="red" d="M12 4.435c-1.989-5.399-12-4.597-12 3.568 0 4.068 3.06 9.481 12 14.997 8.94-5.516 12-10.929 12-14.997 0-8.118-10-8.999-12-3.568z" />
+      </svg>
     </a>
+  </div>
+
+  <div id="nicknameEditRow" class="nickname-edit-row" style="display: none;">
+    <span style="font-size: 12px; color: #666; flex-shrink: 0;">编辑昵称:</span>
+    <input type="text" id="nicknameInput" placeholder="输入昵称" maxlength="20" style="flex: 1; min-width: 0;" />
+    <button id="saveNicknameBtn" class="vt-btn vt-btn-primary" style="padding: 2px 8px; height: auto; font-size: 12px;">保存</button>
+    <button id="cancelNicknameEditBtn" class="vt-btn" style="padding: 2px 8px; height: auto; font-size: 12px;">取消</button>
   </div>
 
   <div class="vt-modal-content">
 
     <div class="vt-modal-body">
-      <div id="mainPannel" class="content" style="display: flex; flex-direction: column; width: 100%; height: 100%; gap: 8px;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span id="videoTogetherRoleText"></span>
-          <span id="memberCount"></span>
-        </div>
+      <div id="mainPannel" class="content" style="display: flex; flex-direction: column; width: 100%; flex: 1; min-height: 0; gap: 8px;">
         <div id="videoTogetherStatusText" style="color: #666; font-size: 12px;"></div>
-        <div style="display: flex; flex-direction: column; gap: 4px;">
+        <div id="roomInputContainer" style="display: flex; flex-direction: column; gap: 4px;">
           <div style="display: flex; align-items: center; gap: 4px;">
             <span class="ellipsis" id="videoTogetherRoomNameLabel" style="width: 60px;">ルーム</span>
             <input id="videoTogetherRoomNameInput" autocomplete="off" placeholder="ルーム名を入力してください" style="flex: 1;">
           </div>
           <div style="display: flex; align-items: center; gap: 4px;">
-            <span class="ellipsis" id="videoTogetherRoomPasswordLabel" style="width: 60px;">パスワード</span>
-            <input id="videoTogetherRoomPdIpt" autocomplete="off" placeholder="ホストのパスワードを入力" style="flex: 1;">
+            <span class="ellipsis" id="videoTogetherRoomPasswordLabel" style="width: 60px; display: none;">パスワード</span>
+            <input id="videoTogetherRoomPdIpt" autocomplete="off" placeholder="ホストのパスワードを入力" style="flex: 1; display: none;">
           </div>
         </div>
-        <div style="flex: 1; min-height: 0;">
-          <div id="textMessageChat" style="display: none; height: 100%;">
-            <div id="chatHistory" style="flex: 1; min-height: 150px; max-height: 200px; overflow-y: auto; margin-bottom: 8px; text-align: left; width: 100%;"></div>
-            <div style="display: flex; gap: 6px; width: 100%;">
-              <input id="textMessageInput" autocomplete="off" placeholder="テキストメッセージ" style="flex: 1;">
-              <button id="textMessageSend" class="vt-btn vt-btn-primary" type="button">
-                <span>送信</span>
-              </button>
-            </div>
+        <div id="textMessageChat" style="display: none; flex-direction: column; flex: 1; min-height: 0; overflow: hidden;">
+          <div id="chatHistory" style="flex: 1; min-height: 0; max-height: 100%; overflow-y: auto; margin-bottom: 8px; text-align: left; width: 100%;"></div>
+        </div>
+        <div id="textMessageConnecting" style="display: none;">
+          <span id="textMessageConnectingStatus">メッセージサービスに接続中...</span>
+          <span id="zhcnTtsMissing">中国語音声パックがありません</span>
+        </div>
+      </div>
+
+      <div id="voicePannel" class="content" style="display: none; flex-direction: column; gap: 8px; width: 100%; flex: 1; min-height: 0;">
+        <div id="videoVolumeCtrl" style="width: 100%;text-align: left;">
+          <span style="display: inline-block;width: 100px;margin-left: 20px;">動画の音量</span>
+          <div class="range-slider">
+            <input id="videoVolume" class="slider" type="range" value="100" min="0" max="100">
           </div>
-          <div id="textMessageConnecting" style="display: none;">
-            <span id="textMessageConnectingStatus">メッセージサービスに接続中...</span>
-            <span id="zhcnTtsMissing">中国語音声パックがありません</span>
+        </div>
+        <div id="callVolumeCtrl" style="width: 100%;text-align: left;">
+          <span style="display: inline-block;width: 100px;margin-left: 20px;">通話の音量</span>
+          <div class="range-slider">
+            <input id="callVolume" class="slider" type="range" value="100" min="0" max="100">
           </div>
+        </div>
+        <div id="iosVolumeErr" style="display: none;">
+          <p>iOSは音量調整をサポートしていません</p>
         </div>
       </div>
 
@@ -2103,41 +2144,18 @@ async function clearRoomChatHistory(roomId) {
             href="https://local.2gether.video/about.ja-jp.html">著作権表示</a>
         </div>
       </div>
-      <div id="voicePannel" class="content" style="display: none; flex-direction: column; gap: 12px; width: 100%;">
-        <div id="videoVolumeCtrl" style="margin-top: 5px;width: 100%;text-align: left;">
-          <span style="margin-top: 5px;display: inline-block;width: 100px;margin-left: 20px;">動画の音量</span>
-          <div class="range-slider">
-            <input id="videoVolume" class="slider" type="range" value="100" min="0" max="100">
-          </div>
-
-        </div>
-        <div id="callVolumeCtrl" style="margin-top: 5px;width: 100%;text-align: left;">
-          <span style="margin-top: 5px;display: inline-block;width: 100px;margin-left: 20px;">通話の音量</span>
-          <div class="range-slider">
-            <input id="callVolume" class="slider" type="range" value="100" min="0" max="100">
-          </div>
-        </div>
-        <div id="iosVolumeErr" style="display: none;">
-          <p>iOSは音量調整をサポートしていません</p>
-        </div>
-        <!-- <div style="margin-top: 5px;width: 100%;text-align: left;">
-          <span
-            style="margin-top: 0px;display: inline-block;margin-left: 20px; margin-right: 10px;">ノイズキャンセリング</span>
-          <label class="toggler-wrapper style-1">
-            <input id="voiceNc" type="checkbox">
-            <div class="toggler-slider">
-              <div class="toggler-knob"></div>
-            </div>
-          </label>
-
-        </div> -->
-      </div>
-
     </div>
 
     <div id="snackbar"></div>
 
     <div class="vt-modal-footer">
+
+      <div id="chatInputRow" style="display: none; gap: 6px; width: 100%;">
+        <input id="textMessageInput" autocomplete="off" placeholder="テキストメッセージ" style="flex: 1;">
+        <button id="textMessageSend" class="vt-btn vt-btn-primary" type="button">
+          <span>送信</span>
+        </button>
+      </div>
 
       <div id="lobbyBtnGroup" style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;">
         <button id="videoTogetherCreateButton" class="vt-btn vt-btn-primary" type="button">
@@ -2149,84 +2167,68 @@ async function clearRoomChatHistory(roomId) {
       </div>
 
 
-      <div id="roomButtonGroup" style="display: none; flex-direction: column; gap: 8px;">
-        <div style="display: flex; gap: 8px; justify-content: center;">
+      <div id="roomButtonGroup" style="display: none; flex-direction: column; gap: 6px;">
+        <div style="display: flex; gap: 6px; justify-content: center;">
           <button id="videoTogetherExitButton" class="vt-btn vt-btn-dangerous" type="button">
             <span>退出</span>
           </button>
           <button id="callBtn" class="vt-btn vt-btn-dangerous" type="button">
             <span>通話</span>
           </button>
+          <button id="videoTogetherHelpButton" class="vt-btn" type="button">
+            <span>ヘルプ</span>
+          </button>
+          <button id="clearChatHistoryBtn" class="vt-btn" type="button">
+            <span>チャット履歴をクリア</span>
+          </button>
         </div>
-        <div style="display: flex; gap: 8px; justify-content: center; align-items: center;">
+        <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
           <div id="callConnecting" class="lds-ellipsis" style="display: none;">
             <div></div>
             <div></div>
             <div></div>
             <div></div>
           </div>
-          <button id="callErrorBtn" class="vt-modal-title-button error-button" style="display: none;">
-            <svg width="24px" height="24px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <button id="callErrorBtn" class="vt-modal-title-button error-button vt-btn" style="display: none; height: 26px; padding: 0 8px;">
+            <svg width="16px" height="16px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path fill="currentColor" d="M11.001 10h2v5h-2zM11 16h2v2h-2z" />
               <path fill="currentColor"
                 d="M13.768 4.2C13.42 3.545 12.742 3.138 12 3.138s-1.42.407-1.768 1.063L2.894 18.064a1.986 1.986 0 0 0 .054 1.968A1.984 1.984 0 0 0 4.661 21h14.678c.708 0 1.349-.362 1.714-.968a1.989 1.989 0 0 0 .054-1.968L13.768 4.2zM4.661 19 12 5.137 19.344 19H4.661z" />
             </svg>
           </button>
-          <button id="audioBtn" style="display: none;" type="button" aria-label="Close"
-            class="vt-modal-audio vt-modal-title-button">
-            <span class="vt-modal-close-x">
-              <span class="vt-anticon vt-anticon-close vt-modal-close-icon">
-                <svg width="24px" height="24px" viewBox="0 0 489.6 489.6" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path stroke="currentColor" stroke-width="16" fill="currentColor" d="M361.1,337.6c2.2,1.5,4.6,2.3,7.1,2.3c3.8,0,7.6-1.8,10-5.2c18.7-26.3,28.5-57.4,28.5-89.9s-9.9-63.6-28.5-89.9
-                  c-3.9-5.5-11.6-6.8-17.1-2.9c-5.5,3.9-6.8,11.6-2.9,17.1c15.7,22.1,24,48.3,24,75.8c0,27.4-8.3,53.6-24,75.8
-                  C354.3,326.1,355.6,333.7,361.1,337.6z" />
-                  <path stroke="currentColor" stroke-width="16" fill="currentColor" d="M425.4,396.3c2.2,1.5,4.6,2.3,7.1,2.3c3.8,0,7.6-1.8,10-5.2c30.8-43.4,47.1-94.8,47.1-148.6s-16.3-105.1-47.1-148.6
-                  c-3.9-5.5-11.6-6.8-17.1-2.9c-5.5,3.9-6.8,11.6-2.9,17.1c27.9,39.3,42.6,85.7,42.6,134.4c0,48.6-14.7,95.1-42.6,134.4
-                  C418.6,384.7,419.9,392.3,425.4,396.3z" />
-                  <path stroke="currentColor" stroke-width="16" fill="currentColor"
-                    d="M254.7,415.7c4.3,2.5,9.2,3.8,14.2,3.8l0,0c7.4,0,14.4-2.8,19.7-7.9c5.6-5.4,8.7-12.6,8.7-20.4V98.5
-                  c0-15.7-12.7-28.4-28.4-28.4c-4.9,0-9.8,1.3-14.2,3.8c-0.3,0.2-0.6,0.3-0.8,0.5l-100.1,69.2H73.3C32.9,143.6,0,176.5,0,216.9v55.6
-                  c0,40.4,32.9,73.3,73.3,73.3h84.5l95.9,69.2C254,415.3,254.4,415.5,254.7,415.7z M161.8,321.3H73.3c-26.9,0-48.8-21.9-48.8-48.8
-                  v-55.6c0-26.9,21.9-48.8,48.8-48.8h84.3c2.5,0,4.9-0.8,7-2.2l102.7-71c0.5-0.3,1.1-0.4,1.6-0.4c1.6,0,3.9,1.2,3.9,3.9v292.7
-                  c0,1.1-0.4,2-1.1,2.8c-0.7,0.7-1.8,1.1-2.7,1.1c-0.5,0-1-0.1-1.5-0.3l-98.4-71.1C166.9,322.1,164.4,321.3,161.8,321.3z" />
-                </svg>
-              </span>
-            </span>
+          <button id="audioBtn" style="display: none;" type="button" aria-label="Mute"
+            class="vt-btn vt-modal-audio">
+            <svg width="16px" height="16px" viewBox="0 0 489.6 489.6" fill="currentColor">
+              <path d="M361.1,337.6c2.2,1.5,4.6,2.3,7.1,2.3c3.8,0,7.6-1.8,10-5.2c18.7-26.3,28.5-57.4,28.5-89.9s-9.9-63.6-28.5-89.9
+              c-3.9-5.5-11.6-6.8-17.1-2.9c-5.5,3.9-6.8,11.6-2.9,17.1c15.7,22.1,24,48.3,24,75.8c0,27.4-8.3,53.6-24,75.8
+              C354.3,326.1,355.6,333.7,361.1,337.6z" />
+              <path d="M425.4,396.3c2.2,1.5,4.6,2.3,7.1,2.3c3.8,0,7.6-1.8,10-5.2c30.8-43.4,47.1-94.8,47.1-148.6s-16.3-105.1-47.1-148.6
+              c-3.9-5.5-11.6-6.8-17.1-2.9c-5.5,3.9-6.8,11.6-2.9,17.1c27.9,39.3,42.6,85.7,42.6,134.4c0,48.6-14.7,95.1-42.6,134.4
+              C418.6,384.7,419.9,392.3,425.4,396.3z" />
+              <path d="M254.7,415.7c4.3,2.5,9.2,3.8,14.2,3.8l0,0c7.4,0,14.4-2.8,19.7-7.9c5.6-5.4,8.7-12.6,8.7-20.4V98.5
+              c0-15.7-12.7-28.4-28.4-28.4c-4.9,0-9.8,1.3-14.2,3.8c-0.3,0.2-0.6,0.3-0.8,0.5l-100.1,69.2H73.3C32.9,143.6,0,176.5,0,216.9v55.6
+              c0,40.4,32.9,73.3,73.3,73.3h84.5l95.9,69.2C254,415.3,254.4,415.5,254.7,415.7z M161.8,321.3H73.3c-26.9,0-48.8-21.9-48.8-48.8
+              v-55.6c0-26.9,21.9-48.8,48.8-48.8h84.3c2.5,0,4.9-0.8,7-2.2l102.7-71c0.5-0.3,1.1-0.4,1.6-0.4c1.6,0,3.9,1.2,3.9,3.9v292.7
+              c0,1.1-0.4,2-1.1,2.8c-0.7,0.7-1.8,1.1-2.7,1.1c-0.5,0-1-0.1-1.5-0.3l-98.4-71.1C166.9,322.1,164.4,321.3,161.8,321.3z" />
+            </svg>
           </button>
-          <button id="micBtn" style="display: none;" type="button" aria-label="Close"
-            class="vt-modal-mic vt-modal-title-button">
-            <span class="vt-modal-close-x">
-              <span class="vt-anticon vt-anticon-close vt-modal-close-icon">
-                <svg width="24px" height="24px" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="48" height="48" fill="white" fill-opacity="0" />
-                  <path
-                    d="M31 24V11C31 7.13401 27.866 4 24 4C20.134 4 17 7.13401 17 11V24C17 27.866 20.134 31 24 31C27.866 31 31 27.866 31 24Z"
-                    stroke="currentColor" stroke-width="4" stroke-linejoin="round" />
-                  <path d="M9 23C9 31.2843 15.7157 38 24 38C32.2843 38 39 31.2843 39 23" stroke="currentColor"
-                    stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
-                  <path d="M24 38V44" stroke="currentColor" stroke-width="4" stroke-linecap="round"
-                    stroke-linejoin="round" />
-                  <path id="disabledMic" d="M42 42L6 6" stroke="currentColor" stroke-width="4" stroke-linecap="round"
-                    stroke-linejoin="round" />
-                </svg>
-                <svg id="enabledMic" style="display: none;" width="24px" height="24px" viewBox="0 0 48 48" fill="none"
-                  xmlns="http://www.w3.org/2000/svg">
-                  <rect width="48" height="48" fill="white" fill-opacity="0" />
-                  <path
-                    d="M31 24V11C31 7.13401 27.866 4 24 4C20.134 4 17 7.13401 17 11V24C17 27.866 20.134 31 24 31C27.866 31 31 27.866 31 24Z"
-                    stroke="currentColor" stroke-width="4" stroke-linejoin="round" />
-                  <path d="M9 23C9 31.2843 15.7157 38 24 38C32.2843 38 39 31.2843 39 23" stroke="currentColor"
-                    stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
-                  <path d="M24 38V44" stroke="currentColor" stroke-width="4" stroke-linecap="round"
-                    stroke-linejoin="round" />
-                </svg>
-              </span>
-            </span>
+          <button id="micBtn" style="display: none;" type="button" aria-label="Microphone"
+            class="vt-btn vt-modal-mic">
+            <svg id="micIconWithSlash" width="16px" height="16px" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2">
+              <rect width="48" height="48" fill="white" fill-opacity="0" />
+              <path d="M31 24V11C31 7.13401 27.866 4 24 4C20.134 4 17 7.13401 17 11V24C17 27.866 20.134 31 24 31C27.866 31 31 27.866 31 24Z" stroke-linejoin="round" />
+              <path d="M9 23C9 31.2843 15.7157 38 24 38C32.2843 38 39 31.2843 39 23" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M24 38V44" stroke-linecap="round" stroke-linejoin="round" />
+              <path id="disabledMic" d="M42 42L6 6" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <svg id="micIconNoSlash" style="display: none;" width="16px" height="16px" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2">
+              <rect width="48" height="48" fill="white" fill-opacity="0" />
+              <path d="M31 24V11C31 7.13401 27.866 4 24 4C20.134 4 17 7.13401 17 11V24C17 27.866 20.134 31 24 31C27.866 31 31 27.866 31 24Z" stroke-linejoin="round" />
+              <path d="M9 23C9 31.2843 15.7157 38 24 38C32.2843 38 39 31.2843 39 23" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M24 38V44" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
           </button>
         </div>
-        <button id="videoTogetherHelpButton" class="vt-btn" type="button" style="align-self: center;">
-          <span>ヘルプ</span>
-        </button>
       </div>
     </div>
   </div>
@@ -2246,21 +2248,24 @@ async function clearRoomChatHistory(roomId) {
 
   #videoTogetherFlyPannel {
     background-color: #ffffff !important;
-    display: block;
+    display: flex;
+    flex-direction: column;
     z-index: 2147483647;
     position: fixed;
     bottom: 15px;
     right: 15px;
-    width: 280px;
-    height: 420px;
+    width: 310px;
+    height: 380px;
     text-align: center;
     border: none !important;
     box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     border-radius: 16px;
     line-height: 1.2;
+    overflow: hidden;
   }
 
   #videoTogetherFlyPannel #videoTogetherHeader {
+    flex-shrink: 0;
     cursor: move;
     touch-action: none;
     align-items: center;
@@ -2268,72 +2273,36 @@ async function clearRoomChatHistory(roomId) {
   }
 
   .vt-modal-content {
-    /* position: relative; */
-    width: 100%;
-    height: 100%;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
 
-  #roomButtonGroup,
-  #lobbyBtnGroup,
-  .content {
-    display: contents;
+  .vt-modal-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+    font-size: 14px;
+    color: black;
+    background-size: cover;
+    padding: 6px;
+    box-sizing: border-box;
   }
 
-  .vt-modal-audio {
-    position: absolute;
-    top: 10px;
-    right: 140px;
-  }
-
-  .vt-modal-mic {
-    position: absolute;
-    top: 10px;
-    right: 100px;
-  }
-
-  .vt-modal-setting {
-    position: absolute;
-    top: -1px;
-    right: 65px;
-  }
-
-  .vt-modal-easyshare {
-    position: absolute;
-    top: -1px;
-    right: 90px;
-  }
-
-  .vt-modal-donate {
-    position: absolute;
-    top: -1px;
-    right: 40px;
-  }
-
-  .vt-modal-title-button {
-    z-index: 10;
-    padding: 0;
-    color: #6c6c6c;
-    font-weight: 700;
-    line-height: 1;
-    text-decoration: none;
-    background: transparent;
-    border: 0;
-    outline: 0;
-    cursor: pointer;
-    transition: color .3s;
-  }
-
-  .vt-modal-close {
-    position: absolute;
-    top: 0;
-    right: 15px;
+  .vt-modal-body > #mainPannel {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
   .vt-modal-close-x {
-    width: 18px;
-    height: 46px;
-    font-size: 16px;
-    font-style: normal;
     line-height: 46px;
     text-align: center;
     text-transform: none;
@@ -2357,7 +2326,7 @@ async function clearRoomChatHistory(roomId) {
 
   .vt-modal-header {
     display: flex;
-    padding: 8px 12px;
+    padding: 4px 8px;
     color: #000000d9;
     background: #fff;
     border-bottom: 1px solid #f0f0f0;
@@ -2365,16 +2334,19 @@ async function clearRoomChatHistory(roomId) {
     align-items: center;
     height: 36px;
     box-sizing: border-box;
+    gap: 2px;
   }
 
   .vt-modal-title {
     margin: 0;
-    margin-left: 10px;
+    margin-left: 6px;
+    margin-right: 4px;
     color: #000000d9;
     font-weight: 500;
-    font-size: 16px;
+    font-size: 14px;
     line-height: 22px;
     word-wrap: break-word;
+    flex-shrink: 0;
   }
 
   .vt-modal-body {
@@ -2383,7 +2355,7 @@ async function clearRoomChatHistory(roomId) {
     display: flex;
     flex-direction: column;
     align-items: center;
-    overflow-y: auto;
+    overflow: hidden;
     font-size: 14px;
     color: black;
     background-size: cover;
@@ -2391,18 +2363,20 @@ async function clearRoomChatHistory(roomId) {
     box-sizing: border-box;
   }
 
+  .vt-modal-body > #mainPannel {
+    height: 100%;
+    overflow: hidden;
+  }
+
   .vt-modal-footer {
-    padding: 10px 12px;
+    padding: 8px 12px;
     text-align: center;
     background: transparent;
     border-top: 1px solid #f0f0f0;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    gap: 6px;
+    flex-shrink: 0;
     box-sizing: border-box;
   }
 
@@ -2421,14 +2395,32 @@ async function clearRoomChatHistory(roomId) {
     -moz-user-select: none;
     user-select: none;
     touch-action: manipulation;
-    height: 32px;
-    padding: 4px 15px;
-    font-size: 14px;
+    height: 26px;
+    padding: 0 8px;
+    font-size: 12px;
     border-radius: 8px;
     color: #000000d9;
     border-color: #d9d9d9;
     background: #fff;
     outline: 0;
+    box-sizing: border-box;
+  }
+
+  .vt-btn span {
+    line-height: 26px;
+  }
+
+  #textMessageInput {
+    border-radius: 8px;
+    padding: 4px 8px;
+    border: 1px solid #ddd;
+    font-size: 12px;
+    box-sizing: border-box;
+  }
+
+  #textMessageInput:focus {
+    border-color: #1890ff;
+    outline: none;
   }
 
   .vt-btn:hover {
@@ -2462,11 +2454,21 @@ async function clearRoomChatHistory(roomId) {
     color: #fff;
     border-color: #ff4d4f;
     background-color: #ff4d4f;
+    height: 26px !important;
+    padding: 0 8px !important;
+    font-size: 12px !important;
+    line-height: 26px !important;
+    min-width: 52px !important;
+    box-sizing: border-box !important;
   }
 
   .vt-btn-dangerous:hover {
     border-color: #f77173 !important;
     background-color: #f77173 !important;
+  }
+
+  .vt-btn-dangerous span {
+    line-height: 26px !important;
   }
 
   .vt-modal-content-item {
@@ -2715,38 +2717,33 @@ async function clearRoomChatHistory(roomId) {
   #snackbar {
     visibility: hidden;
     width: auto;
-    background-color: #333;
+    min-width: 200px;
+    max-width: 320px;
+    background-color: rgba(30, 30, 30, 0.9);
+    backdrop-filter: blur(10px);
     color: #fff;
     text-align: center;
-    padding: 16px 0px 16px 0px;
-    position: relative;
+    padding: 12px 20px;
+    border-radius: 10px;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
     z-index: 999999;
-    top: -56px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    font-size: 13px;
   }
 
   #snackbar.show {
     visibility: visible;
-    animation: fadein 0.5s, fadeout 0.5s 2.5s;
+    animation: slideUpFadeOut 2s ease-out forwards;
   }
 
-  @keyframes fadein {
-    from {
-      opacity: 0;
-    }
-
-    to {
-      opacity: 1;
-    }
-  }
-
-  @keyframes fadeout {
-    from {
-      opacity: 1;
-    }
-
-    to {
-      opacity: 0;
-    }
+  @keyframes slideUpFadeOut {
+    0% { opacity: 0; transform: translateX(-50%) translateY(100px); }
+    10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    75% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
   }
 
   #downloadProgress {
@@ -2809,17 +2806,29 @@ async function clearRoomChatHistory(roomId) {
   .chat-message .content {
     color: #1f1f1f;
   }
-  .nickname-dropdown {
-    position: relative;
-    display: inline-block;
-    margin-left: auto;
-    margin-right: 8px;
+  .nickname-edit-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    background: #fafafa;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .nickname-edit-row input {
+    padding: 4px 8px;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+    font-size: 12px;
+    outline: none;
+  }
+  .nickname-edit-row input:focus {
+    border-color: #1890ff;
   }
   .nickname-btn {
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 4px 8px;
+    gap: 2px;
+    padding: 2px 6px;
     background: #f5f5f5;
     border-radius: 6px;
     cursor: pointer;
@@ -2827,69 +2836,39 @@ async function clearRoomChatHistory(roomId) {
     color: #000000d9;
     border: none;
     transition: background 0.2s;
+    white-space: nowrap;
   }
   .nickname-btn:hover {
     background: #e8e8e8;
   }
-  .nickname-menu {
-    display: none;
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    min-width: 120px;
-    z-index: 1000;
-    padding: 4px 0;
-    margin-top: 4px;
+
+  .vt-modal-audio,
+  .vt-modal-mic {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
   }
-  .nickname-menu.show {
+
+  .vt-modal-audio svg,
+  .vt-modal-mic svg {
+    flex-shrink: 0;
+  }
+
+  .vt-modal-mic.muted #micIconWithSlash {
     display: block;
   }
-  .nickname-menu-item {
-    padding: 8px 12px;
-    font-size: 13px;
-    cursor: pointer;
-    color: #000000d9;
-  }
-  .nickname-menu-item:hover {
-    background: #f5f5f5;
-  }
-  .nickname-input-container {
+
+  .vt-modal-mic.muted #micIconNoSlash {
     display: none;
-    padding: 8px 12px;
-    gap: 6px;
   }
-  .nickname-input-container.show {
-    display: flex;
+
+  .vt-modal-mic:not(.muted) #micIconWithSlash {
+    display: none;
   }
-  .nickname-input-container input {
-    flex: 1;
-    padding: 6px 8px;
-    border: 1px solid #d9d9d9;
-    border-radius: 6px;
-    font-size: 13px;
-    outline: none;
-  }
-  .nickname-input-container input:focus {
-    border-color: #1890ff;
-    box-shadow: 0 0 0 2px rgba(24,144,255,0.2);
-  }
-  .nickname-input-container button {
-    padding: 6px 10px;
-    font-size: 12px;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-  }
-  .nickname-save-btn {
-    background: #1890ff;
-    color: #fff;
-  }
-  .nickname-cancel-btn {
-    background: #f5f5f5;
-    color: #000000d9;
+
+  .vt-modal-mic:not(.muted) #micIconNoSlash {
+    display: block;
   }
 </style>`);
                 (document.body || document.documentElement).appendChild(shadowWrapper);
@@ -2917,11 +2896,39 @@ async function clearRoomChatHistory(roomId) {
                 });
                 wrapper.querySelector("#textMessageSend").onclick = async () => {
                     extension.currentSendingMsgId = generateUUID();
-                    const nickname = await getGM().getValue("ChatNickname") || "匿名用户";
+                    const nickname = await getNickname();
                     const content = select("#textMessageInput").value;
                     const wrappedMsg = wrapMessage(nickname, content);
                     WS.sendTextMessage(extension.currentSendingMsgId, wrappedMsg);
                 }
+
+                // 非全屏模式的 GotTxtMsgCallback
+                GotTxtMsgCallback = async (id, msg) => {
+                    console.log(id, msg);
+                    const parsed = parseMessage(msg);
+                    const roomId = extension.ctxRoomId || "default";
+                    const isSelf = id == extension.currentSendingMsgId;
+
+                    // 存储到历史记录
+                    await addMessageToHistory(roomId, parsed.sender, parsed.content, isSelf);
+
+                    // 渲染到 UI
+                    const chatHistoryEl = select("#chatHistory");
+                    if (chatHistoryEl) {
+                        renderChatMessage(chatHistoryEl, parsed.sender, parsed.content, isSelf);
+                    }
+
+                    // TTS 过滤
+                    const ttsContent = getTTSContent(msg);
+                    if (ttsContent && ttsContent.trim()) {
+                        extension.gotTextMsg(id, ttsContent, false, -1);
+                    }
+                    if (isSelf) {
+                        const msgInput = select("#textMessageInput");
+                        if (msgInput) msgInput.value = "";
+                    }
+                }
+
                 this.lobbyBtnGroup = wrapper.querySelector("#lobbyBtnGroup");
                 this.createRoomButton = wrapper.querySelector('#videoTogetherCreateButton');
                 this.joinRoomButton = wrapper.querySelector("#videoTogetherJoinButton");
@@ -2935,8 +2942,10 @@ async function clearRoomChatHistory(roomId) {
                 this.videoVolume = wrapper.querySelector("#videoVolume");
                 this.callVolumeSlider = wrapper.querySelector("#callVolume");
                 this.callErrorBtn = wrapper.querySelector("#callErrorBtn");
+                this.clearChatHistoryBtn = wrapper.querySelector("#clearChatHistoryBtn");
                 this.easyShareCopyBtn = wrapper.querySelector("#easyShareCopyBtn");
                 this.textMessageChat = wrapper.querySelector("#textMessageChat");
+                this.chatInputRow = wrapper.querySelector("#chatInputRow");
                 this.textMessageConnecting = wrapper.querySelector("#textMessageConnecting");
                 this.textMessageConnectingStatus = wrapper.querySelector("#textMessageConnectingStatus");
                 this.zhcnTtsMissing = wrapper.querySelector("#zhcnTtsMissing");
@@ -3015,6 +3024,20 @@ async function clearRoomChatHistory(roomId) {
                 this.callErrorBtn.onclick = () => {
                     Voice.join("", window.videoTogetherExtension.roomName);
                 }
+                this.clearChatHistoryBtn.onclick = async () => {
+                    const roomId = extension.ctxRoomId || "default";
+                    const history = await getChatHistory();
+                    if (history[roomId]) {
+                        history[roomId].messages = [];
+                        history[roomId].lastActivity = Date.now();
+                        await saveChatHistory(history);
+                    }
+                    const chatHistoryEl = select("#chatHistory");
+                    if (chatHistoryEl) {
+                        chatHistoryEl.innerHTML = "";
+                    }
+                    popupError("チャット履歴がクリアされました");
+                }
                 this.videoVolume.oninput = () => {
                     extension.videoVolume = this.videoVolume.value;
                     sendMessageToTop(MessageType.ChangeVideoVolume, { volume: extension.getVideoVolume() / 100 });
@@ -3069,6 +3092,8 @@ async function clearRoomChatHistory(roomId) {
                 });
                 this.videoTogetherRoleText = wrapper.querySelector("#videoTogetherRoleText")
                 this.videoTogetherSetting = wrapper.querySelector("#videoTogetherSetting");
+                this.roomNameDisplay = wrapper.querySelector("#roomNameDisplay");
+                this.roomInputContainer = wrapper.querySelector("#roomInputContainer");
                 hide(this.videoTogetherSetting);
                 this.inputRoomName = wrapper.querySelector('#videoTogetherRoomNameInput');
                 this.inputRoomPassword = wrapper.querySelector("#videoTogetherRoomPdIpt");
@@ -3137,6 +3162,7 @@ async function clearRoomChatHistory(roomId) {
 
         setTxtMsgInterface(type) {
             hide(this.textMessageChat);
+            hide(this.chatInputRow);
             hide(this.textMessageConnecting);
             hide(this.textMessageConnectingStatus);
             hide(this.zhcnTtsMissing);
@@ -3145,6 +3171,7 @@ async function clearRoomChatHistory(roomId) {
             }
             if (type == 1) {
                 show(this.textMessageChat);
+                show(this.chatInputRow);
                 // 加载聊天历史
                 this.loadChatHistory();
             }
@@ -3167,92 +3194,95 @@ async function clearRoomChatHistory(roomId) {
         loadChatHistory() {
             const chatHistoryEl = select("#chatHistory");
             if (!chatHistoryEl) return;
-            chatHistoryEl.innerHTML = "";
             const roomId = extension.ctxRoomId || "default";
             getRoomChatHistory(roomId).then(messages => {
-                messages.forEach(msg => {
-                    renderChatMessage(chatHistoryEl, msg.sender, msg.content, msg.isSelf);
-                });
+                // Only load if chat is empty (avoid clearing newly rendered messages)
+                if (chatHistoryEl.children.length === 0) {
+                    messages.forEach(msg => {
+                        renderChatMessage(chatHistoryEl, msg.sender, msg.content, msg.isSelf);
+                    });
+                }
             }).catch(() => {});
         }
 
         initNicknameDropdown() {
             if (!this.wrapper) return;
 
-            // For extension context, use browser.storage.local directly
-            // For userscript context, use GM API
-            const storage = typeof browser !== 'undefined' && browser.storage
-                ? browser.storage.local
-                : (typeof GM !== 'undefined' ? GM : null);
+            // Use window.getGM if available, otherwise fall back to browser.storage.local or GM
+            console.log("initNicknameDropdown checking storage:");
+            console.log("  window.getGM exists:", !!window.getGM);
+            console.log("  browser exists:", typeof browser !== 'undefined');
+
+            let storage = null;
+            if (window.getGM) {
+                storage = window.getGM();
+            } else if (typeof browser !== 'undefined' && browser && browser.storage && browser.storage.local) {
+                storage = browser.storage.local;
+            } else if (typeof GM !== 'undefined') {
+                storage = GM;
+            } else {
+                // Fallback to localStorage
+                storage = {
+                    get: async (key) => {
+                        const value = localStorage.getItem(key);
+                        return value ? JSON.parse(value) : null;
+                    },
+                    set: async (key, value) => {
+                        localStorage.setItem(key, JSON.stringify(value));
+                    }
+                };
+            }
+
+            console.log("initNicknameDropdown storage:", storage);
 
             const nicknameBtn = this.wrapper.querySelector("#nicknameBtn");
-            const nicknameMenu = this.wrapper.querySelector("#nicknameMenu");
             const nicknameText = this.wrapper.querySelector("#nicknameText");
-            const nicknameInputContainer = this.wrapper.querySelector("#nicknameInputContainer");
+            const nicknameEditRow = this.wrapper.querySelector("#nicknameEditRow");
             const nicknameInput = this.wrapper.querySelector("#nicknameInput");
-            const editNicknameBtn = this.wrapper.querySelector("#editNicknameBtn");
             const saveNicknameBtn = this.wrapper.querySelector("#saveNicknameBtn");
-            const cancelNicknameBtn = this.wrapper.querySelector("#cancelNicknameBtn");
             const cancelNicknameEditBtn = this.wrapper.querySelector("#cancelNicknameEditBtn");
 
-            if (!nicknameBtn || !nicknameMenu) return;
+            if (!nicknameBtn || !nicknameEditRow) return;
 
-            // Load saved nickname (browser.storage.local.get returns object with key)
+            // Load saved nickname
             if (storage) {
                 storage.get("ChatNickname").then(result => {
-                    if (result.ChatNickname) {
+                    if (result && result.ChatNickname) {
                         nicknameText.textContent = result.ChatNickname;
                     }
                 });
             }
 
-            // Toggle nickname menu
-            nicknameBtn.addEventListener("click", (e) => {
-                e.stopPropagation();
-                nicknameMenu.classList.toggle("show");
-            });
-
-            // Edit nickname
-            editNicknameBtn.addEventListener("click", () => {
-                nicknameMenu.classList.remove("show");
-                nicknameInputContainer.classList.add("show");
-                nicknameInput.value = nicknameText.textContent === "匿名用户" ? "" : nicknameText.textContent;
-                nicknameInput.focus();
-            });
-
-            // Cancel nickname menu
-            cancelNicknameBtn.addEventListener("click", () => {
-                nicknameMenu.classList.remove("show");
+            // Click nickname button to show edit row
+            nicknameBtn.addEventListener("click", () => {
+                nicknameEditRow.style.display = nicknameEditRow.style.display === "none" ? "flex" : "none";
+                if (nicknameEditRow.style.display === "flex") {
+                    nicknameInput.value = nicknameText.textContent === "匿名用户" ? "" : nicknameText.textContent;
+                    nicknameInput.focus();
+                }
             });
 
             // Cancel nickname edit
             cancelNicknameEditBtn.addEventListener("click", () => {
-                nicknameInputContainer.classList.remove("show");
+                nicknameEditRow.style.display = "none";
             });
 
             // Save nickname
             saveNicknameBtn.addEventListener("click", async () => {
                 const newNickname = nicknameInput.value.trim() || "匿名用户";
+                console.log("Saving nickname:", newNickname, "storage:", storage);
                 if (storage) {
-                    await storage.set({ ChatNickname: newNickname });
+                    await storage.set("ChatNickname", { ChatNickname: newNickname });
+                    console.log("Nickname saved successfully");
                 }
                 nicknameText.textContent = newNickname;
-                nicknameInputContainer.classList.remove("show");
+                nicknameEditRow.style.display = "none";
             });
 
             // Save on Enter key
             nicknameInput.addEventListener("keyup", (e) => {
                 if (e.key === "Enter") {
                     saveNicknameBtn.click();
-                }
-            });
-
-            // Close dropdown when clicking outside
-            document.addEventListener("click", (e) => {
-                const nicknameDropdown = select("#nicknameDropdown");
-                if (nicknameDropdown && !nicknameDropdown.contains(e.target)) {
-                    nicknameMenu.classList.remove("show");
-                    nicknameInputContainer.classList.remove("show");
                 }
             });
         }
@@ -3354,6 +3384,11 @@ async function clearRoomChatHistory(roomId) {
             } catch { };
             this.Maximize();
             this.inputRoomName.disabled = true;
+            this.inputRoomName.style.display = "none";
+            this.inputRoomNameLabel.style.display = "none";
+            this.roomInputContainer.style.display = "none";
+            this.roomNameDisplay.style.display = "inline";
+            this.roomNameDisplay.textContent = this.inputRoomName.value;
             hide(this.lobbyBtnGroup)
             show(this.roomButtonGroup);
             this.exitButton.style = "";
@@ -3369,6 +3404,10 @@ async function clearRoomChatHistory(roomId) {
                 this.Maximize();
             }
             this.inputRoomName.disabled = false;
+            this.inputRoomName.style.display = "inline";
+            this.inputRoomNameLabel.style.display = "inline";
+            this.roomInputContainer.style.display = "flex";
+            this.roomNameDisplay.style.display = "none";
             this.inputRoomPasswordLabel.style.display = "inline-block";
             this.inputRoomPassword.style.display = "inline-block";
             this.inputRoomName.placeholder = "ルーム名を入力してください"
@@ -3546,7 +3585,7 @@ async function clearRoomChatHistory(roomId) {
 
             this.activatedVideo = undefined;
             this.tempUser = generateTempUserId();
-            this.version = '1776999607';
+            this.version = '1777026049';
             this.isMain = (window.self == window.top);
             this.UserId = undefined;
 

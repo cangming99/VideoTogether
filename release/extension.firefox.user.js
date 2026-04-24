@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Video Together 一起看视频
 // @namespace    https://videotogether.github.io/
-// @version      1760354064
+// @version      1777012988
 // @description  Watch video together 一起看视频
 // @author       maggch@outlook.com
 // @match        *://*/*
@@ -32,7 +32,7 @@
         return;
     }
 
-    let version = '1760354064'
+    let version = '1777012988'
     let type = 'Firefox'
     function getBrowser() {
         switch (type) {
@@ -58,6 +58,8 @@
         }
         return GM;
     }
+    // Expose getGM to window so vt.js can access it
+    window.getGM = getGM;
 
     function getRealTableName(table) {
         return table.replace('-mini', '');
