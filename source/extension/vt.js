@@ -1259,13 +1259,10 @@ function getStorage() {
 
 async function getNickname() {
     const storage = getStorage();
-    console.log("getNickname storage:", storage);
     if (storage) {
         const result = await storage.get("ChatNickname");
-        console.log("getNickname result:", result);
         return result && result.ChatNickname ? result.ChatNickname : "匿名用户";
     }
-    console.log("getNickname: no storage, returning default");
     return "匿名用户";
 }
 
@@ -1473,10 +1470,6 @@ async function clearRoomChatHistory(roomId) {
                     let closeBtn = wrapper.getElementById('close-btn');
                     let expanded = true;
                     const chatHistoryEl = wrapper.getElementById('chatHistory');
-                    // 初始状态已展开，显示聊天记录
-                    if (chatHistoryEl) {
-                        chatHistoryEl.classList.add('show');
-                    }
                     // 加载聊天历史
                     if (chatHistoryEl) {
                         const roomId = extension.roomName || "default";
@@ -1485,6 +1478,10 @@ async function clearRoomChatHistory(roomId) {
                                 messages.forEach(msg => {
                                     renderChatMessage(chatHistoryEl, msg.sender, msg.content, msg.isSelf);
                                 });
+                            }
+                            // 有消息时才显示聊天记录区域
+                            if (chatHistoryEl.children.length > 0) {
+                                chatHistoryEl.classList.add('show');
                             }
                         }).catch(() => {});
                     }
@@ -1500,16 +1497,17 @@ async function clearRoomChatHistory(roomId) {
                             expandBtn.innerText = '<';
                             sendBtn.style.display = 'inline-block';
                             msgInput.classList.add("expand");
-                            if (chatHistoryEl) chatHistoryEl.classList.add('show');
+                            if (chatHistoryEl && chatHistoryEl.children.length > 0) chatHistoryEl.classList.add('show');
                         }
                         expanded = !expanded;
                     }
                     closeBtn.onclick = () => { shadowWrapper.style.display = "none"; }
                     wrapper.getElementById('expand-button').addEventListener('click', () => expand());
                     sendBtn.onclick = async () => {
+                        const content = msgInput.value.trim();
+                        if (!content) return;
                         extension.currentSendingMsgId = generateUUID();
                         const nickname = await getNickname();
-                        const content = msgInput.value;
                         const wrappedMsg = wrapMessage(nickname, content);
                         sendMessageToTop(MessageType.SendTxtMsg, { currentSendingMsgId: extension.currentSendingMsgId, value: wrappedMsg });
                     }
@@ -1596,7 +1594,9 @@ async function clearRoomChatHistory(roomId) {
                     }
                 });
                 wrapper.querySelector("#textMessageSend").onclick = async () => {
-                    const content = select("#textMessageInput").value.trim();
+                    const input = wrapper.querySelector("#textMessageInput");
+                    if (!input) return;
+                    const content = input.value.trim();
                     if (!content) return;
                     extension.currentSendingMsgId = generateUUID();
                     const nickname = await getNickname();
