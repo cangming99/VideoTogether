@@ -1328,6 +1328,7 @@ async function clearRoomChatHistory(roomId) {
     }
 
     let GotTxtMsgCallback = undefined;
+    let normalPanelGotTxtMsgCallback = undefined; // Store normal panel's callback for restoration
 
     function renderChatMessage(chatHistoryEl, sender, content, isSelf) {
         const msgDiv = document.createElement("div");
@@ -1511,6 +1512,8 @@ async function clearRoomChatHistory(roomId) {
                         const wrappedMsg = wrapMessage(nickname, content);
                         sendMessageToTop(MessageType.SendTxtMsg, { currentSendingMsgId: extension.currentSendingMsgId, value: wrappedMsg });
                     }
+                    // Save current callback before fullscreen overrides it
+                    normalPanelGotTxtMsgCallback = GotTxtMsgCallback;
                     GotTxtMsgCallback = async (id, msg) => {
                         console.log(id, msg);
                         const parsed = parseMessage(msg);
@@ -1549,7 +1552,8 @@ async function clearRoomChatHistory(roomId) {
                         this.fullscreenSWrapper.remove();
                         this.fullscreenSWrapper = undefined;
                         this.fullscreenWrapper = undefined;
-                        GotTxtMsgCallback = undefined;
+                        // Restore normal panel's callback
+                        GotTxtMsgCallback = normalPanelGotTxtMsgCallback;
                     }
                 }
             }, 500);
