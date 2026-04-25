@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Video Together 一起看视频
 // @namespace    https://2gether.video/
-// @version      1777091845
+// @version      1777091970
 // @description  Watch video together 一起看视频
 // @author       maggch@outlook.com
 // @match        *://*/*
@@ -2021,6 +2021,8 @@ async function clearRoomChatHistory(roomId) {
                             // 有消息时才显示聊天记录区域
                             if (chatHistoryEl.children.length > 0) {
                                 chatHistoryEl.classList.add('show');
+                                // 滚动到最新消息
+                                chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
                             }
                         }).catch(() => {});
                     }
@@ -2092,6 +2094,11 @@ async function clearRoomChatHistory(roomId) {
                         this.fullscreenWrapper = undefined;
                         // Restore normal panel's callback
                         GotTxtMsgCallback = normalPanelGotTxtMsgCallback;
+                        // Scroll normal panel chat to bottom
+                        const normalChatHistory = select("#chatHistory");
+                        if (normalChatHistory) {
+                            normalChatHistory.scrollTop = normalChatHistory.scrollHeight;
+                        }
                     }
                 }
             }, 500);
@@ -3888,7 +3895,7 @@ async function clearRoomChatHistory(roomId) {
 
             this.activatedVideo = undefined;
             this.tempUser = generateTempUserId();
-            this.version = '1777091845';
+            this.version = '1777091970';
             this.isMain = (window.self == window.top);
             this.UserId = undefined;
 

@@ -1528,6 +1528,8 @@ async function clearRoomChatHistory(roomId) {
                         // 渲染到 UI
                         if (chatHistoryEl) {
                             renderChatMessage(chatHistoryEl, parsed.sender, parsed.content, isSelf);
+                            // 显示聊天记录区域
+                            chatHistoryEl.classList.add('show');
                         }
 
                         // 气泡通知（仅接收方，全屏面板收起时显示）
