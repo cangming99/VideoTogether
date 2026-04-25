@@ -1596,9 +1596,10 @@ async function clearRoomChatHistory(roomId) {
                     }
                 });
                 wrapper.querySelector("#textMessageSend").onclick = async () => {
+                    const content = select("#textMessageInput").value.trim();
+                    if (!content) return;
                     extension.currentSendingMsgId = generateUUID();
                     const nickname = await getNickname();
-                    const content = select("#textMessageInput").value;
                     const wrappedMsg = wrapMessage(nickname, content);
                     WS.sendTextMessage(extension.currentSendingMsgId, wrappedMsg);
                 }
