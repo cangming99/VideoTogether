@@ -1611,6 +1611,7 @@ async function clearRoomChatHistory(roomId) {
                         ttsBtn.style.backgroundColor = ttsEnabled ? "#1890ff" : "#999";
                         ttsBtn.style.color = "#fff";
                         ttsBtn.style.borderColor = ttsEnabled ? "#1890ff" : "#999";
+                        ttsBtn.classList.toggle("gray", !ttsEnabled);
                     };
                     updateTtsBtnStyle();
                     ttsBtn.addEventListener("click", (e) => {
