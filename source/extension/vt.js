@@ -1483,6 +1483,8 @@ async function clearRoomChatHistory(roomId) {
                             // 有消息时才显示聊天记录区域
                             if (chatHistoryEl.children.length > 0) {
                                 chatHistoryEl.classList.add('show');
+                                // 滚动到最新消息
+                                chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
                             }
                         }).catch(() => {});
                     }

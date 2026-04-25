@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Video Together 一起看视频
 // @namespace    https://2gether.video/
-// @version      1777091409
+// @version      1777091845
 // @description  Watch video together 一起看视频
 // @author       maggch@outlook.com
 // @match        *://*/*
@@ -3496,6 +3496,14 @@ async function clearRoomChatHistory(roomId) {
                     messages.forEach(msg => {
                         renderChatMessage(chatHistoryEl, msg.sender, msg.content, msg.isSelf);
                     });
+                } else {
+                    // For simplicity, just reload if chat has fewer messages than history
+                    if (messages.length > chatHistoryEl.children.length) {
+                        chatHistoryEl.innerHTML = '';
+                        messages.forEach(msg => {
+                            renderChatMessage(chatHistoryEl, msg.sender, msg.content, msg.isSelf);
+                        });
+                    }
                 }
             }).catch(() => {});
         }
@@ -3880,7 +3888,7 @@ async function clearRoomChatHistory(roomId) {
 
             this.activatedVideo = undefined;
             this.tempUser = generateTempUserId();
-            this.version = '1777091409';
+            this.version = '1777091845';
             this.isMain = (window.self == window.top);
             this.UserId = undefined;
 
