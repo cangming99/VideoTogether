@@ -2056,6 +2056,14 @@ async function clearRoomChatHistory(roomId) {
                     messages.forEach(msg => {
                         renderChatMessage(chatHistoryEl, msg.sender, msg.content, msg.isSelf);
                     });
+                } else {
+                    // For simplicity, just reload if chat has fewer messages than history
+                    if (messages.length > chatHistoryEl.children.length) {
+                        chatHistoryEl.innerHTML = '';
+                        messages.forEach(msg => {
+                            renderChatMessage(chatHistoryEl, msg.sender, msg.content, msg.isSelf);
+                        });
+                    }
                 }
             }).catch(() => {});
         }
