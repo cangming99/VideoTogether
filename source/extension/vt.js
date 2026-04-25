@@ -1556,6 +1556,11 @@ async function clearRoomChatHistory(roomId) {
                         this.fullscreenWrapper = undefined;
                         // Restore normal panel's callback
                         GotTxtMsgCallback = normalPanelGotTxtMsgCallback;
+                        // Scroll normal panel chat to bottom
+                        const normalChatHistory = select("#chatHistory");
+                        if (normalChatHistory) {
+                            normalChatHistory.scrollTop = normalChatHistory.scrollHeight;
+                        }
                     }
                 }
             }, 500);
