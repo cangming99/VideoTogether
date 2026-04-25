@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Video Together 一起看视频
 // @namespace    https://2gether.video/
-// @version      1777091970
+// @version      1777092431
 // @description  Watch video together 一起看视频
 // @author       maggch@outlook.com
 // @match        *://*/*
@@ -2047,6 +2047,10 @@ async function clearRoomChatHistory(roomId) {
                     sendBtn.onclick = async () => {
                         const content = msgInput.value.trim();
                         if (!content) return;
+                        // Show chat UI immediately when sending
+                        if (chatHistoryEl) {
+                            chatHistoryEl.classList.add('show');
+                        }
                         extension.currentSendingMsgId = generateUUID();
                         const nickname = await getNickname();
                         const wrappedMsg = wrapMessage(nickname, content);
@@ -2066,6 +2070,8 @@ async function clearRoomChatHistory(roomId) {
                         // 渲染到 UI
                         if (chatHistoryEl) {
                             renderChatMessage(chatHistoryEl, parsed.sender, parsed.content, isSelf);
+                            // 显示聊天记录区域
+                            chatHistoryEl.classList.add('show');
                         }
 
                         // 气泡通知（仅接收方，全屏面板收起时显示）
@@ -3327,11 +3333,21 @@ async function clearRoomChatHistory(roomId) {
                         // 删除按钮
                         roomItem.querySelector(".delete-btn").onclick = function() {
                             if (confirm("Are you sure you want to delete this room's chat history?")) {
+                                const currentRoomId = extension.roomName || "default";
+                                const isCurrentRoom = roomId === currentRoomId;
                                 delete history[roomId];
                                 saveChatHistory(history);
                                 roomItem.remove();
                                 if (roomList.children.length === 0) {
                                     roomList.innerHTML = `<div style="text-align: center; color: #999; padding: 30px;">No chat history</div>`;
+                                }
+                                // Clear chat UI if deleting current room's history
+                                if (isCurrentRoom) {
+                                    const chatHistoryEl = select("#chatHistory");
+                                    if (chatHistoryEl) {
+                                        chatHistoryEl.innerHTML = '';
+                                        chatHistoryEl.classList.remove('show');
+                                    }
                                 }
                             }
                         };
@@ -3895,7 +3911,7 @@ async function clearRoomChatHistory(roomId) {
 
             this.activatedVideo = undefined;
             this.tempUser = generateTempUserId();
-            this.version = '1777091970';
+            this.version = '1777092431';
             this.isMain = (window.self == window.top);
             this.UserId = undefined;
 

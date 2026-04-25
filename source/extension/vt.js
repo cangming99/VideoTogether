@@ -1624,7 +1624,8 @@ async function clearRoomChatHistory(roomId) {
                 // TTS 按钮
                 const ttsBtn = wrapper.querySelector("#ttsBtn");
                 if (ttsBtn) {
-                    let ttsEnabled = window.VideoTogetherStorage?.PublicEnableTTS !== false;
+                    // 默认关闭 TTS
+                    let ttsEnabled = window.VideoTogetherStorage?.PublicEnableTTS === true;
                     const updateTtsBtnStyle = () => {
                         ttsBtn.style.backgroundColor = ttsEnabled ? "#1890ff" : "#999";
                         ttsBtn.style.color = "#fff";
