@@ -1509,6 +1509,10 @@ async function clearRoomChatHistory(roomId) {
                     sendBtn.onclick = async () => {
                         const content = msgInput.value.trim();
                         if (!content) return;
+                        // Show chat UI immediately when sending
+                        if (chatHistoryEl) {
+                            chatHistoryEl.classList.add('show');
+                        }
                         extension.currentSendingMsgId = generateUUID();
                         const nickname = await getNickname();
                         const wrappedMsg = wrapMessage(nickname, content);
@@ -1889,11 +1893,21 @@ async function clearRoomChatHistory(roomId) {
                         // 删除按钮
                         roomItem.querySelector(".delete-btn").onclick = function() {
                             if (confirm("{$chatHistoryConfirmDelete$}")) {
+                                const currentRoomId = extension.roomName || "default";
+                                const isCurrentRoom = roomId === currentRoomId;
                                 delete history[roomId];
                                 saveChatHistory(history);
                                 roomItem.remove();
                                 if (roomList.children.length === 0) {
                                     roomList.innerHTML = `<div style="text-align: center; color: #999; padding: 30px;">{$chatHistoryEmpty$}</div>`;
+                                }
+                                // Clear chat UI if deleting current room's history
+                                if (isCurrentRoom) {
+                                    const chatHistoryEl = select("#chatHistory");
+                                    if (chatHistoryEl) {
+                                        chatHistoryEl.innerHTML = '';
+                                        chatHistoryEl.classList.remove('show');
+                                    }
                                 }
                             }
                         };
