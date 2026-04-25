@@ -2569,7 +2569,7 @@ async function clearRoomChatHistory(roomId) {
         async gotTextMsg(id, msg, prepare = false, idx = -1, audioUrl = undefined) {
             // 检查 TTS 按钮是否启用
             const ttsBtn = select("#ttsBtn");
-            if (!prepare && ttsBtn && window.VideoTogetherStorage.PublicEnableTTS == false) {
+            if (!prepare && ttsBtn && window.VideoTogetherStorage.PublicEnableTTS !== true) {
                 return;
             }
             if (idx > speechSynthesis.getVoices().length) {

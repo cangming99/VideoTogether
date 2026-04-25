@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Video Together 一起看视频
 // @namespace    https://2gether.video/
-// @version      1777092431
+// @version      1777094175
 // @description  Watch video together 一起看视频
 // @author       maggch@outlook.com
 // @match        *://*/*
@@ -3064,7 +3064,8 @@ async function clearRoomChatHistory(roomId) {
                 // TTS 按钮
                 const ttsBtn = wrapper.querySelector("#ttsBtn");
                 if (ttsBtn) {
-                    let ttsEnabled = window.VideoTogetherStorage?.PublicEnableTTS !== false;
+                    // 默认关闭 TTS
+                    let ttsEnabled = window.VideoTogetherStorage?.PublicEnableTTS === true;
                     const updateTtsBtnStyle = () => {
                         ttsBtn.style.backgroundColor = ttsEnabled ? "#1890ff" : "#999";
                         ttsBtn.style.color = "#fff";
@@ -3911,7 +3912,7 @@ async function clearRoomChatHistory(roomId) {
 
             this.activatedVideo = undefined;
             this.tempUser = generateTempUserId();
-            this.version = '1777092431';
+            this.version = '1777094175';
             this.isMain = (window.self == window.top);
             this.UserId = undefined;
 
