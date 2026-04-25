@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Video Together 一起看视频
 // @namespace    https://2gether.video/
-// @version      1777050967
+// @version      1777087701
 // @description  Watch video together 一起看视频
 // @author       maggch@outlook.com
 // @match        *://*/*
@@ -2163,15 +2163,15 @@ async function clearRoomChatHistory(roomId) {
   <div class="vt-modal-content">
 
     <div class="vt-modal-body">
-      <div id="mainPannel" class="content" style="display: flex; flex-direction: column; width: 100%; flex: 1; min-height: 0; gap: 8px;">
-        <div id="roomInputContainer" style="display: flex; flex-direction: column; gap: 8px; padding: 10px 0; width: 100%;">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="ellipsis" id="videoTogetherRoomNameLabel" style="width: 70px; flex-shrink: 0;">Room</span>
-            <input id="videoTogetherRoomNameInput" autocomplete="off" placeholder="Name of room" style="flex: 1; height: 36px; padding: 0 12px; font-size: 14px; border-radius: 8px; border: 1px solid #d9d9d9;">
+      <div id="mainPannel" class="content" style="display: flex; flex-direction: column; width: 100%; flex: 1; min-height: 0; gap: 8px; justify-content: center;">
+        <div id="roomInputContainer" style="display: flex; flex-direction: column; gap: 12px; padding: 16px; width: 100%; background: #f8f9fa; border-radius: 12px; box-sizing: border-box;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span class="ellipsis" id="videoTogetherRoomNameLabel" style="width: 64px; flex-shrink: 0; font-size: 13px; color: #555; font-weight: 500;">Room</span>
+            <input id="videoTogetherRoomNameInput" autocomplete="off" placeholder="Name of room" style="flex: 1; height: 38px; padding: 0 14px; font-size: 14px; border-radius: 10px; border: 1px solid #e0e0e0; background: #fff; outline: none; transition: border-color 0.2s, box-shadow 0.2s;">
           </div>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="ellipsis" id="videoTogetherRoomPasswordLabel" style="width: 70px; flex-shrink: 0; display: none;">Password</span>
-            <input id="videoTogetherRoomPdIpt" autocomplete="off" placeholder="Host's password" style="flex: 1; height: 36px; padding: 0 12px; font-size: 14px; border-radius: 8px; border: 1px solid #d9d9d9; display: none;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span class="ellipsis" id="videoTogetherRoomPasswordLabel" style="width: 64px; flex-shrink: 0; font-size: 13px; color: #555; font-weight: 500; display: none;">Password</span>
+            <input id="videoTogetherRoomPdIpt" autocomplete="off" placeholder="Host's password" style="flex: 1; height: 38px; padding: 0 14px; font-size: 14px; border-radius: 10px; border: 1px solid #e0e0e0; background: #fff; outline: none; display: none; transition: border-color 0.2s, box-shadow 0.2s;">
           </div>
         </div>
         <div id="textMessageChat" style="display: none; flex-direction: column; flex: 1; min-height: 0; overflow: hidden;">
@@ -2230,9 +2230,9 @@ async function clearRoomChatHistory(roomId) {
 
     <div class="vt-modal-footer">
 
-      <div id="chatInputRow" style="display: flex; gap: 6px; width: 100%; align-items: center; flex-wrap: nowrap; box-sizing: border-box; min-width: 0;">
-        <input id="textMessageInput" autocomplete="off" placeholder="Text Message" style="flex: 1; min-width: 0; height: 34px; padding: 0 10px; font-size: 13px; border-radius: 6px; border: 1px solid #d9d9d9;">
-        <button id="textMessageSend" class="vt-btn vt-btn-primary" type="button" style="height: 34px; padding: 0 16px; font-size: 13px; border-radius: 6px; flex-shrink: 0; min-width: 0; box-sizing: border-box;">
+      <div id="chatInputRow" style="display: flex; gap: 6px; width: 100%; align-items: center; padding: 0 6px; box-sizing: border-box;">
+        <input id="textMessageInput" autocomplete="off" placeholder="Text Message" style="width: calc(100% - 82px); height: 34px; padding: 0 10px; font-size: 13px; border-radius: 6px; border: 1px solid #d9d9d9; box-sizing: border-box; outline: none;">
+        <button id="textMessageSend" class="vt-btn vt-btn-primary" type="button" style="width: 64px; height: 34px; padding: 0; font-size: 13px; border-radius: 6px; flex-shrink: 0;">
           <span>Send</span>
         </button>
       </div>
@@ -2274,7 +2274,7 @@ async function clearRoomChatHistory(roomId) {
             <div></div>
             <div></div>
           </div>
-          <button id="callErrorBtn" class="vt-btn vt-modal-error" style="display: none; height: 34px; width: 34px; padding: 0; border-radius: 10px; background: #ff4d4f; color: #fff; display: flex; align-items: center; justify-content: center;">
+          <button id="callErrorBtn" class="vt-btn vt-modal-error" style="display: none; height: 34px; width: 34px; padding: 0; border-radius: 10px; background: #ff4d4f; color: #fff; align-items: center; justify-content: center;">
             <svg width="16px" height="16px" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
             </svg>
@@ -2439,7 +2439,7 @@ async function clearRoomChatHistory(roomId) {
   }
 
   .vt-modal-footer {
-    padding: 8px 12px;
+    padding: 8px 0;
     text-align: center;
     background: transparent;
     border-top: 1px solid #f0f0f0;
@@ -2448,6 +2448,39 @@ async function clearRoomChatHistory(roomId) {
     gap: 6px;
     flex-shrink: 0;
     box-sizing: border-box;
+    align-items: stretch;
+    overflow: hidden;
+  }
+
+  #chatInputRow {
+    min-width: 0;
+    width: 100%;
+    flex-shrink: 0;
+    margin: 0;
+  }
+
+  #chatInputRow > * {
+    min-width: 0;
+  }
+
+  #ttsBtn:hover {
+    border-color: #6ebff4 !important;
+    background-color: #6ebff4 !important;
+  }
+
+  #ttsBtn.gray:hover {
+    border-color: #777 !important;
+    background-color: #777 !important;
+  }
+
+  #callBtn:hover {
+    border-color: #73d981 !important;
+    background-color: #73d981 !important;
+  }
+
+  #exitCallBtn:hover {
+    border-color: #f77173 !important;
+    background-color: #f77173 !important;
   }
 
   .vt-btn {
@@ -2589,6 +2622,12 @@ async function clearRoomChatHistory(roomId) {
     background-color: #ffffff;
     border: 1px solid #e9e9e9;
     margin: 0;
+  }
+
+  #videoTogetherRoomNameInput:focus,
+  #videoTogetherRoomPdIpt:focus {
+    border-color: #1890ff;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.15);
   }
 
   .lds-ellipsis {
@@ -2995,6 +3034,7 @@ async function clearRoomChatHistory(roomId) {
                         ttsBtn.style.backgroundColor = ttsEnabled ? "#1890ff" : "#999";
                         ttsBtn.style.color = "#fff";
                         ttsBtn.style.borderColor = ttsEnabled ? "#1890ff" : "#999";
+                        ttsBtn.classList.toggle("gray", !ttsEnabled);
                     };
                     updateTtsBtnStyle();
                     ttsBtn.addEventListener("click", (e) => {
@@ -3818,7 +3858,7 @@ async function clearRoomChatHistory(roomId) {
 
             this.activatedVideo = undefined;
             this.tempUser = generateTempUserId();
-            this.version = '1777050967';
+            this.version = '1777087701';
             this.isMain = (window.self == window.top);
             this.UserId = undefined;
 
